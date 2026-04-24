@@ -1,0 +1,1218 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Wesley Chapel Elementary — Today</title>
+    <style>
+      :root {
+        --bg: #07111b;
+        --ink: #eaf2ff;
+        --muted: #b7c7de;
+        --border: rgba(255, 255, 255, 0.14);
+        --card: #ffffff;
+        --cardInk: #111;
+        --in: #27ae60;
+        --out: #3498db;
+        --warnBg: rgba(192, 57, 43, 0.18);
+        --warnBd: rgba(192, 57, 43, 0.35);
+      }
+      body {
+        margin: 0;
+        font-family: system-ui;
+        background: var(--bg);
+        color: var(--ink);
+        /* Disable pull-to-refresh on mobile */
+        overscroll-behavior-y: contain;
+      }
+      html {
+        overscroll-behavior-y: contain;
+      }
+      .refreshWarning {
+        background: linear-gradient(90deg, #c0392b 0%, #e74c3c 100%);
+        color: #fff;
+        text-align: center;
+        padding: 10px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        border-bottom: 2px solid #922b21;
+      }
+      .levelBtns {
+        display: flex;
+        gap: 4px;
+        margin-top: 4px;
+      }
+      .levelBtn {
+        padding: 4px 8px;
+        font-size: 11px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.1);
+        color: var(--ink);
+        cursor: pointer;
+      }
+      .levelBtn.active {
+        background: #3498db;
+        border-color: #2980b9;
+        color: #fff;
+      }
+      .levelBtn.L1 { background: #27ae60; border-color: #1e8449; color: #fff; }
+      .levelBtn.L2 { background: #f39c12; border-color: #d68910; color: #fff; }
+      .levelBtn.L3 { background: #e74c3c; border-color: #c0392b; color: #fff; }
+      .levelBadge {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: bold;
+        color: #fff;
+      }
+      .levelBadge.L1 { background: #27ae60; }
+      .levelBadge.L2 { background: #f39c12; }
+      .levelBadge.L3 { background: #e74c3c; }
+      .modeBar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      .modeBtn {
+        padding: 8px 18px;
+        border-radius: 10px;
+        border: 2px solid var(--border);
+        background: rgba(255,255,255,0.08);
+        color: var(--ink);
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .modeBtn.active {
+        background: linear-gradient(135deg, #1abc9c, #16a085);
+        border-color: #1abc9c;
+      }
+      .colorBar {
+        display: none;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 8px;
+      }
+      .colorBar.visible { display: flex; }
+      .colorChoice {
+        padding: 6px 16px;
+        border-radius: 8px;
+        border: 2px solid transparent;
+        font-size: 16px;
+        font-weight: 900;
+        cursor: pointer;
+        background: rgba(255,255,255,0.1);
+        letter-spacing: 0.04em;
+      }
+      .colorChoice.green { color: #2ecc71; }
+      .colorChoice.orange { color: #f39c12; }
+      .colorChoice.red { color: #e74c3c; }
+      .colorChoice.none { background: #111; color: #fff; border: 2px solid #555; }
+      .colorChoice.selected { border-color: #fff; background: rgba(255,255,255,0.25); }
+      .colorChoice.none.selected { border-color: #fff; background: #333; }
+      .clearAllBtn {
+        padding: 6px 14px;
+        border-radius: 8px;
+        border: 2px solid rgba(192,57,43,0.5);
+        background: rgba(192,57,43,0.2);
+        color: #ffd7d7;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-left: 8px;
+      }
+      .card.group-green { border-color: #2ecc71 !important; box-shadow: 0 0 16px rgba(46,204,113,0.5) !important; opacity: 1 !important; filter: none !important; }
+      .card.group-orange { border-color: #f39c12 !important; box-shadow: 0 0 16px rgba(243,156,18,0.5) !important; opacity: 1 !important; filter: none !important; }
+      .card.group-red { border-color: #e74c3c !important; box-shadow: 0 0 16px rgba(231,76,60,0.5) !important; opacity: 1 !important; filter: none !important; }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border);
+        padding: 12px 12px 10px;
+      }
+      .topbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+      }
+      h1 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .counterBig {
+        margin-top: 10px;
+        padding: 24px 28px;
+        background: linear-gradient(135deg, #1e8449 0%, #145a32 100%);
+        border: 4px solid #2ecc71;
+        border-radius: 18px;
+        font-size: 32px;
+        font-weight: 900;
+        text-align: center;
+        color: #fff;
+        box-shadow: 0 8px 32px rgba(46, 204, 113, 0.4), inset 0 2px 4px rgba(255,255,255,0.2);
+        text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        letter-spacing: 0.02em;
+      }
+      .counterBig .nums {
+        font-size: 72px;
+        display: block;
+        line-height: 1;
+        margin-bottom: 8px;
+        text-shadow: 0 4px 16px rgba(0,0,0,0.6);
+      }
+      .pill {
+        margin-top: 6px;
+        color: #cfe;
+        font-size: 14px;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .sortRow {
+        margin-top: 10px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .sortRow span {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      input,
+      button,
+      a.smallLink {
+        font-size: 14px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--ink);
+      }
+      button {
+        cursor: pointer;
+      }
+      button.primary {
+        border: none;
+        background: linear-gradient(135deg, #1abc9c, #16a085);
+      }
+      button.sortBtn {
+        padding: 6px 12px;
+        font-size: 12px;
+        border-radius: 8px;
+      }
+      button.sortBtn.active {
+        background: linear-gradient(135deg, #1abc9c, #16a085);
+        border-color: transparent;
+      }
+      a.smallLink {
+        display: inline-block;
+        text-decoration: underline;
+        color: #aee;
+      }
+      .warn {
+        display: none;
+        margin-top: 8px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        font-size: 14px;
+        background: var(--warnBg);
+        border: 1px solid var(--warnBd);
+        color: #ffd7d7;
+      }
+      main {
+        padding: 12px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      .grid {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      }
+      @media (max-width: 520px) {
+        .grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 8px;
+        }
+      }
+      @media (min-width: 521px) and (max-width: 800px) {
+        .grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+      }
+      @media (min-width: 801px) and (max-width: 1100px) {
+        .grid {
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+      }
+      @media (min-width: 1101px) {
+        .grid {
+          grid-template-columns: repeat(6, minmax(0, 1fr));
+        }
+      }
+      .card {
+        position: relative;
+        background: rgba(60, 60, 80, 0.5);
+        color: #999;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 3px solid rgba(100, 100, 120, 0.3);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        user-select: none;
+        opacity: 0.6;
+        filter: grayscale(40%);
+        transition: all 0.2s ease;
+      }
+      .card.in {
+        background: var(--card);
+        color: var(--cardInk);
+        border: 5px solid #2ecc71;
+        box-shadow: 0 0 20px rgba(46, 204, 113, 0.5), 0 8px 24px rgba(0, 0, 0, 0.3);
+        opacity: 1;
+        filter: none;
+        transform: scale(1.02);
+      }
+      .card.out {
+        background: var(--card);
+        color: var(--cardInk);
+        border-color: color-mix(in srgb, var(--out) 85%, white);
+        opacity: 0.85;
+        filter: none;
+      }
+      .photo {
+        height: 100px;
+        background: radial-gradient(circle at 30% 20%, #3a6ea5, #1a2f44);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 900;
+        font-size: 28px;
+        letter-spacing: 0.04em;
+        background-size: cover;
+        background-position: center 20%;
+        position: relative;
+      }
+      .gradeOverlay {
+        position: absolute;
+        bottom: 4px;
+        right: 4px;
+        background: rgba(0,0,0,0.7);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 6px;
+      }
+      .name {
+        padding: 6px 8px 3px;
+        font-weight: 700;
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .status {
+        padding: 0 8px 6px;
+        font-size: 11px;
+        color: #666;
+      }
+
+      .overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(6px);
+        padding: 16px;
+      }
+      .modal {
+        width: min(560px, 100%);
+        background: #0f2234;
+        color: var(--ink);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 16px 16px 14px;
+        box-shadow: 0 22px 50px rgba(0, 0, 0, 0.6);
+      }
+      .modal h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .modal p {
+        margin: 10px 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.35;
+      }
+      .modal .row2 {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 10px;
+      }
+      .modal input {
+        flex: 1;
+        min-width: 180px;
+        font-size: 18px;
+        padding: 12px 12px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--ink);
+      }
+      .error {
+        margin-top: 10px;
+        color: #ffd1d1;
+        font-size: 14px;
+        display: none;
+      }
+      .hint {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      footer {
+        padding: 16px 12px 24px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="refreshWarning">DO NOT REFRESH PAGE - Refreshing will clear all attendance entries!</div>
+    <header>
+      <div class="topbar">
+        <div>
+          <h1>
+            Wesley Chapel Elementary — Today
+            <span style="opacity: 0.85">[weschapel]</span>
+          </h1>
+          <div class="pill" id="dateInfo">Loading…</div>
+        </div>
+        <div class="row">
+          <input id="date" type="date" />
+          <button class="primary" id="refresh">Refresh</button>
+          <a class="smallLink" href="/svb/rosters/index.html">Menu</a>
+        </div>
+      </div>
+      <div class="counterBig" id="counterTop">
+        <span class="nums" id="counterTopNums">--</span> in attendance now
+      </div>
+      <div class="sortRow">
+        <span>Sort by:</span>
+        <button class="sortBtn active" id="sortFirst">First Name</button>
+        <button class="sortBtn" id="sortLast">Last Name</button>
+        <button class="sortBtn" id="sortGrade">Grade</button>
+        <button class="sortBtn" id="sortLevel">Level</button>
+        <span style="margin-left: 16px;">|</span>
+        <button class="sortBtn" id="selectAll" style="background: linear-gradient(135deg, #27ae60, #1e8449);">Select All</button>
+        <button class="sortBtn" id="deselectAll" style="background: linear-gradient(135deg, #c0392b, #922b21);">Deselect All</button>
+        <span style="margin-left: 16px;">|</span>
+        <button id="emailReport" class="sortBtn" style="border: none; cursor: pointer; color: #fff;">Email Report</button>
+      </div>
+      <div class="modeBar">
+        <button class="modeBtn active" id="modeAttendance">Attendance</button>
+        <button class="modeBtn" id="modeGroups">Groups</button>
+      </div>
+      <div class="colorBar" id="colorBar">
+        <span class="colorChoice green" data-color="green">GREEN</span>
+        <span class="colorChoice orange" data-color="orange">ORANGE</span>
+        <span class="colorChoice red" data-color="red">RED</span>
+        <span class="colorChoice none" data-color="none">NONE</span>
+        <button class="clearAllBtn" id="clearAllLevels">Clear All Levels</button>
+      </div>
+      <div class="warn" id="cancelBanner"></div>
+    </header>
+
+    <main>
+      <div class="grid" id="grid"></div>
+    </main>
+
+
+    <div class="overlay" id="pinOverlay">
+      <div class="modal">
+        <h2>Enter coach PIN</h2>
+        <p>
+          This roster is ready now. Add participants in the Google Sheet tab named <b>rosters</b> using
+          roster_id <b>weschapel</b>. Include grade in the <b>grade</b> column.
+        </p>
+        <div class="row2">
+          <input
+            id="pinInput"
+            type="tel"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            maxlength="6"
+            placeholder="PIN (e.g., 5665)"
+          />
+          <button class="primary" id="pinGo">Unlock</button>
+          <button id="pinClear">Clear</button>
+        </div>
+        <div class="error" id="pinError">Wrong PIN. Try again.</div>
+        <div class="hint">PIN is stored only in this browser session.</div>
+      </div>
+    </div>
+
+    <script>
+      /* ====== CONFIG ====== */
+      const SCRIPT_URL =
+        "https://script.google.com/macros/s/AKfycbznvlI35ckcTD4jyLNhtokbPW58Ug4Xn5NRvbBL8VjvzUCorEg2VWPYjdUuPSFxEddt/exec";
+      const ROSTER_ID = "weschapel";
+      const TZ_LABEL = "America/New_York";
+
+      const photoOverrides = {};
+
+      // Wesley Chapel photos - lowercase full names with underscores
+      const wesleyChapelPhotos = [
+        'alana_craig', 'alana_harmon', 'austin_sharpe', 'carolina_mellor',
+        'dominic_pajazetovic', 'gannon_boylan', 'geet_patel', 'jackson_duenskie',
+        'janie_williams', 'joaquin_garcia', 'nash_boylan', 'nicole_toth',
+        'paisley_klein', 'riley_ann_rivera', 'rylie_collier', 'samardh_mantha',
+        'shiva_sai_vishruth_bolla'
+      ];
+
+      function getPhotoByFullName(displayName) {
+        const fullName = displayName.toLowerCase().replace(/\s+/g, '_');
+        const match = wesleyChapelPhotos.find(name => name === fullName);
+        return match ? `/photos/wesley_chapel_el/${match}.jpg` : '';
+      }
+
+      const placeholderCards = [
+        {
+          participant_id: "placeholder_1",
+          display_name: "Wesley Chapel roster",
+          photo_url: "",
+          grade: "",
+        },
+        {
+          participant_id: "placeholder_2",
+          display_name: "Add First + Last names",
+          photo_url: "",
+          grade: "",
+        },
+        {
+          participant_id: "placeholder_3",
+          display_name: "in Google Sheet → rosters",
+          photo_url: "",
+          grade: "",
+        },
+      ];
+
+      /* ====== DOM ====== */
+      const el = (id) => document.getElementById(id);
+      const grid = el("grid");
+      const dateEl = el("date");
+      const refreshBtn = el("refresh");
+      const dateInfoEl = el("dateInfo");
+      const counterTopNums = el("counterTopNums");
+      const cancelBanner = el("cancelBanner");
+
+      const pinOverlay = el("pinOverlay");
+      const pinInput = el("pinInput");
+      const pinGo = el("pinGo");
+      const pinClear = el("pinClear");
+      const pinError = el("pinError");
+
+      const sortFirst = el("sortFirst");
+      const sortLast = el("sortLast");
+      const sortGrade = el("sortGrade");
+      const sortLevel = el("sortLevel");
+      const selectAllBtn = el("selectAll");
+      const deselectAllBtn = el("deselectAll");
+      const emailReportLink = el("emailReport");
+
+      const modeAttendanceBtn = el("modeAttendance");
+      const modeGroupsBtn = el("modeGroups");
+      const colorBar = el("colorBar");
+      const clearAllLevelsBtn = el("clearAllLevels");
+
+      let currentMode = "attendance";
+      let selectedGroupColor = null;
+      const GROUP_KEY = "svb_groups_weschapel";
+      let groupColors = JSON.parse(localStorage.getItem(GROUP_KEY) || "{}");
+      function saveGroupColor(pid, color) {
+        if (color) { groupColors[pid] = color; } else { delete groupColors[pid]; }
+        localStorage.setItem(GROUP_KEY, JSON.stringify(groupColors));
+        syncGroupColorsToServer();
+      }
+      let syncTimer = null;
+      function syncGroupColorsToServer() {
+        clearTimeout(syncTimer);
+        syncTimer = setTimeout(() => {
+          fetch("/api/svb/groups/weschapel", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(groupColors),
+          }).catch(() => {});
+        }, 500);
+      }
+      function loadGroupColorsFromServer() {
+        fetch("/api/svb/groups/weschapel")
+          .then(r => r.json())
+          .then(data => {
+            if (data && typeof data === "object") {
+              groupColors = data;
+              localStorage.setItem(GROUP_KEY, JSON.stringify(groupColors));
+              render();
+            }
+          }).catch(() => {});
+      }
+      loadGroupColorsFromServer();
+      const colorCycle = [null, "green", "orange", "red"];
+
+      modeAttendanceBtn.onclick = () => {
+        currentMode = "attendance";
+        modeAttendanceBtn.classList.add("active");
+        modeGroupsBtn.classList.remove("active");
+        colorBar.classList.remove("visible");
+        selectedGroupColor = null;
+        document.querySelectorAll(".colorChoice").forEach(c => c.classList.remove("selected"));
+        render();
+      };
+      modeGroupsBtn.onclick = () => {
+        currentMode = "groups";
+        modeGroupsBtn.classList.add("active");
+        modeAttendanceBtn.classList.remove("active");
+        colorBar.classList.add("visible");
+        render();
+      };
+      document.querySelectorAll(".colorChoice").forEach(choice => {
+        choice.onclick = () => {
+          const c = choice.dataset.color;
+          if (selectedGroupColor === c) {
+            selectedGroupColor = null;
+            choice.classList.remove("selected");
+          } else {
+            selectedGroupColor = c;
+            document.querySelectorAll(".colorChoice").forEach(x => x.classList.remove("selected"));
+            choice.classList.add("selected");
+          }
+        };
+      });
+      clearAllLevelsBtn.onclick = () => {
+        if (confirm("Clear all group levels?")) {
+          groupColors = {};
+          localStorage.setItem(GROUP_KEY, JSON.stringify(groupColors));
+          syncGroupColorsToServer();
+          render();
+        }
+      };
+
+      let currentSort = "first"; // first, last, grade, level
+      
+      function getLevel(pid) {
+        return groupColors[pid] || "";
+      }
+      
+      // Prevent pull-to-refresh on touch devices
+      let lastTouchY = 0;
+      document.addEventListener('touchstart', function(e) {
+        lastTouchY = e.touches[0].clientY;
+      }, { passive: true });
+      document.addEventListener('touchmove', function(e) {
+        const touchY = e.touches[0].clientY;
+        const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+        if (scrollTop <= 0 && touchY > lastTouchY) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+
+      /* ====== SESSION PIN ====== */
+      const PIN_SESSION_KEY = "svb_pin_session";
+      function getPin() {
+        return sessionStorage.getItem(PIN_SESSION_KEY) || "";
+      }
+      function setPin(v) {
+        sessionStorage.setItem(PIN_SESSION_KEY, v);
+      }
+      function clearPin() {
+        sessionStorage.removeItem(PIN_SESSION_KEY);
+      }
+
+      dateEl.value = new Date().toISOString().slice(0, 10);
+
+      /* ====== JSONP helper (avoids CORS) ====== */
+      function jsonp(url, cbName, onDone) {
+        const s = document.createElement("script");
+        s.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cbName;
+        s.onerror = () => {
+          s.remove();
+          onDone({ ok: false, error: "network" });
+        };
+        window[cbName] = (data) => {
+          try {
+            onDone(data);
+          } finally {
+            delete window[cbName];
+            s.remove();
+          }
+        };
+        document.body.appendChild(s);
+      }
+      function qs(obj) {
+        return Object.keys(obj)
+          .map(
+            (k) =>
+              encodeURIComponent(k) + "=" + encodeURIComponent(obj[k] ?? ""),
+          )
+          .join("&");
+      }
+      function deviceLabel() {
+        const ua = navigator.userAgent || "";
+        return ua.slice(0, 80);
+      }
+      function initials(name) {
+        return name
+          .split(/\s+/)
+          .filter(Boolean)
+          .map((x) => x[0])
+          .join("")
+          .slice(0, 3)
+          .toUpperCase();
+      }
+
+      /* ====== Photo fallback + cache ====== */
+      const photoLoadCache = {};
+      function applyPhotoOrInitials(photoEl, displayName, photoUrl) {
+        photoEl.style.backgroundImage = "";
+        photoEl.textContent = initials(displayName);
+        if (!photoUrl) return;
+
+        if (photoLoadCache[photoUrl] === true) {
+          photoEl.style.backgroundImage = `url('${photoUrl}')`;
+          photoEl.textContent = "";
+          return;
+        }
+        if (photoLoadCache[photoUrl] === false) {
+          return;
+        }
+
+        const img = new Image();
+        img.onload = () => {
+          photoLoadCache[photoUrl] = true;
+          photoEl.style.backgroundImage = `url('${photoUrl}')`;
+          photoEl.textContent = "";
+        };
+        img.onerror = () => {
+          photoLoadCache[photoUrl] = false;
+        };
+        img.src = photoUrl;
+      }
+
+      /* ====== Data ====== */
+      let roster = [];
+      let statusMap = {};
+      let localChanges = {};
+
+      /* ====== Sorting ====== */
+      function parseGrade(g) {
+        if (!g) return 99;
+        const str = String(g).toLowerCase().trim();
+        if (str === "pk" || str === "pre-k" || str === "prek") return -1;
+        if (str === "k" || str === "kindergarten") return 0;
+        const num = parseInt(str);
+        return isNaN(num) ? 99 : num;
+      }
+      
+      function sortRoster(list) {
+        const sorted = [...list];
+        if (currentSort === "first") {
+          sorted.sort((a, b) => {
+            const aName = (a.display_name || "").split(" ")[0].toLowerCase();
+            const bName = (b.display_name || "").split(" ")[0].toLowerCase();
+            return aName.localeCompare(bName);
+          });
+        } else if (currentSort === "last") {
+          sorted.sort((a, b) => {
+            const aParts = (a.display_name || "").split(" ");
+            const bParts = (b.display_name || "").split(" ");
+            const aLast = (aParts[aParts.length - 1] || "").toLowerCase();
+            const bLast = (bParts[bParts.length - 1] || "").toLowerCase();
+            return aLast.localeCompare(bLast);
+          });
+        } else if (currentSort === "grade") {
+          sorted.sort((a, b) => {
+            const aGrade = parseGrade(a.grade || a.Grade || a.GRADE || a.student_grade);
+            const bGrade = parseGrade(b.grade || b.Grade || b.GRADE || b.student_grade);
+            if (aGrade !== bGrade) return aGrade - bGrade;
+            const aName = (a.display_name || "").toLowerCase();
+            const bName = (b.display_name || "").toLowerCase();
+            return aName.localeCompare(bName);
+          });
+        } else if (currentSort === "level") {
+          sorted.sort((a, b) => {
+            const aLvl = getLevel(a.participant_id) || "Z"; // no level sorts last
+            const bLvl = getLevel(b.participant_id) || "Z";
+            if (aLvl !== bLvl) return aLvl.localeCompare(bLvl);
+            const aName = (a.display_name || "").toLowerCase();
+            const bName = (b.display_name || "").toLowerCase();
+            return aName.localeCompare(bName);
+          });
+        }
+        return sorted;
+      }
+
+      function updateSortButtons() {
+        sortFirst.classList.toggle("active", currentSort === "first");
+        sortLast.classList.toggle("active", currentSort === "last");
+        sortGrade.classList.toggle("active", currentSort === "grade");
+        sortLevel.classList.toggle("active", currentSort === "level");
+      }
+
+      sortFirst.onclick = () => { currentSort = "first"; updateSortButtons(); render(); };
+      sortLevel.onclick = () => { currentSort = "level"; updateSortButtons(); render(); };
+      sortLast.onclick = () => { currentSort = "last"; updateSortButtons(); render(); };
+      sortGrade.onclick = () => { currentSort = "grade"; updateSortButtons(); render(); };
+
+      // Select All / Deselect All
+      selectAllBtn.onclick = () => {
+        const pin = getPin();
+        if (!pin) { showPinOverlay(); return; }
+        if (!roster.length) { alert("Roster empty."); return; }
+        roster.forEach((p) => {
+          const pid = p.participant_id;
+          const st = statusMap[pid]?.status || "none";
+          if (st !== "in") {
+            logEvent(pin, { participant_id: pid, action: "signin", status: "in" });
+            const newStatus = { status: "in", ts: new Date().toISOString() };
+            statusMap[pid] = newStatus;
+            localChanges[pid] = newStatus;
+          }
+        });
+        render();
+        setTimeout(refreshAll, 2000);
+      };
+
+      deselectAllBtn.onclick = () => {
+        const pin = getPin();
+        if (!pin) { showPinOverlay(); return; }
+        if (!roster.length) { alert("Roster empty."); return; }
+        roster.forEach((p) => {
+          const pid = p.participant_id;
+          const st = statusMap[pid]?.status || "none";
+          if (st === "in") {
+            logEvent(pin, { participant_id: pid, action: "undo", status: "none" });
+            const newStatus = { status: "none", ts: new Date().toISOString() };
+            statusMap[pid] = newStatus;
+            localChanges[pid] = newStatus;
+          }
+        });
+        render();
+        setTimeout(refreshAll, 2000);
+      };
+
+      /* ====== PIN gate ====== */
+      async function verifyPin(pin) {
+        return new Promise((resolve) => {
+          const url =
+            SCRIPT_URL +
+            "?" +
+            qs({ action: "roster", pin, roster_id: ROSTER_ID });
+          
+          // Show debug info on screen
+          pinError.textContent = "Checking PIN: " + pin + " (length: " + pin.length + ")";
+          pinError.style.display = "block";
+          pinError.style.color = "yellow";
+          
+          console.log("Verify URL:", url);
+          console.log("PIN being sent:", pin, "type:", typeof pin, "length:", pin.length);
+          
+          jsonp(url, "cb_pin_" + Date.now(), (data) => {
+            console.log("Verify response:", JSON.stringify(data));
+            // Show response on screen
+            pinError.textContent = "Response: " + JSON.stringify(data).substring(0, 100);
+            pinError.style.color = data.ok ? "lime" : "red";
+            
+            setTimeout(() => {
+              if (!data.ok) {
+                pinError.textContent = "PIN rejected. Error: " + (data.error || "unknown") + " | Sent PIN: " + pin;
+                pinError.style.color = "red";
+              }
+              resolve(!!data.ok);
+            }, 1500);
+          });
+        });
+      }
+      function showPinOverlay() {
+        pinOverlay.style.display = "flex";
+        pinError.style.display = "none";
+        pinInput.value = "";
+        pinInput.focus();
+      }
+      function hidePinOverlay() {
+        pinOverlay.style.display = "none";
+      }
+
+      pinGo.onclick = async () => {
+        // Aggressively clean the PIN - remove any non-digit characters Samsung might add
+        const rawValue = pinInput.value || "";
+        const pin = rawValue.replace(/[^0-9]/g, "").trim();
+        console.log("PIN raw:", JSON.stringify(rawValue), "cleaned:", pin, "length:", pin.length);
+        pinError.style.display = "none";
+        if (!pin) {
+          pinError.textContent = "Enter PIN.";
+          pinError.style.display = "block";
+          return;
+        }
+        const ok = await verifyPin(pin);
+        console.log("PIN verify result:", ok);
+        if (!ok) {
+          pinError.textContent = "Wrong PIN. Try again.";
+          pinError.style.display = "block";
+          return;
+        }
+        setPin(pin);
+        hidePinOverlay();
+        refreshAll();
+      };
+      pinClear.onclick = () => {
+        pinInput.value = "";
+        pinInput.focus();
+      };
+
+      document.addEventListener("keydown", (e) => {
+        if (pinOverlay.style.display !== "none" && e.key === "Enter")
+          pinGo.click();
+      });
+
+      /* ====== Loaders ====== */
+      function loadRoster(pin) {
+        return new Promise((resolve) => {
+          const url =
+            SCRIPT_URL +
+            "?" +
+            qs({ action: "roster", pin, roster_id: ROSTER_ID });
+          console.log("Loading roster from:", url);
+          jsonp(url, "cb_roster_" + Date.now(), (data) => {
+            console.log("Roster response:", JSON.stringify(data).substring(0, 200));
+            if (!data.ok) {
+              resolve({ ok: false, error: data.error || "roster_failed" });
+              return;
+            }
+            roster = (data.participants || []).filter(
+              (p) => p && p.participant_id,
+            );
+            resolve({ ok: true });
+          });
+        });
+      }
+      function loadStatus(pin) {
+        return new Promise((resolve) => {
+          const date_iso = dateEl.value;
+          const url =
+            SCRIPT_URL +
+            "?" +
+            qs({ action: "status", pin, roster_id: ROSTER_ID, date_iso });
+          jsonp(url, "cb_status_" + Date.now(), (data) => {
+            if (!data.ok) {
+              resolve({ ok: false, error: data.error || "status_failed" });
+              return;
+            }
+            const serverStatus = data.by_participant || {};
+            statusMap = {};
+            Object.keys(serverStatus).forEach(pid => {
+              const serverTs = new Date(serverStatus[pid]?.ts || 0).getTime();
+              const localTs = new Date(localChanges[pid]?.ts || 0).getTime();
+              if (localTs > serverTs) {
+                statusMap[pid] = localChanges[pid];
+              } else {
+                statusMap[pid] = serverStatus[pid];
+                delete localChanges[pid];
+              }
+            });
+            Object.keys(localChanges).forEach(pid => {
+              if (!statusMap[pid]) {
+                statusMap[pid] = localChanges[pid];
+              }
+            });
+            const cancelled = data.cancelled_reason || "";
+            if (cancelled) {
+              cancelBanner.style.display = "block";
+              cancelBanner.textContent = "Cancelled session: " + cancelled;
+            } else {
+              cancelBanner.style.display = "none";
+              cancelBanner.textContent = "";
+            }
+            resolve({ ok: true });
+          });
+        });
+      }
+      function logEvent(pin, payload) {
+        const url =
+          SCRIPT_URL +
+          "?" +
+          qs(
+            Object.assign(
+              {
+                action: "log",
+                pin,
+                roster_id: ROSTER_ID,
+                date_iso: dateEl.value,
+                device: deviceLabel(),
+                actor: "coach",
+              },
+              payload,
+            ),
+          );
+        const img = new Image();
+        img.src = url;
+      }
+
+      /* ====== UI ====== */
+      function updateCounter() {
+        const list = roster.length ? roster : [];
+        let inNow = 0;
+        let presentTotal = 0;
+        list.forEach((p) => {
+          const st = statusMap[p.participant_id]?.status || "none";
+          if (st === "in") {
+            inNow++;
+            presentTotal++;
+          } else if (st === "out") {
+            presentTotal++;
+          }
+        });
+        const date_iso = dateEl.value;
+        dateInfoEl.textContent = `Date: ${date_iso}  •  ${TZ_LABEL}  •  Total roster: ${list.length}`;
+        counterTopNums.textContent = inNow;
+        
+        // Update email report link
+        const presentNames = [];
+        list.forEach((p) => {
+          const st = statusMap[p.participant_id]?.status || "none";
+          if (st === "in") {
+            presentNames.push(p.display_name || p.participant_id);
+          }
+        });
+        const subject = encodeURIComponent(`Wesley Chapel Attendance Report - ${date_iso}`);
+        const body = encodeURIComponent(
+          `Wesley Chapel Elementary Attendance Report\nDate: ${date_iso}\n\nTotal Present: ${inNow} of ${list.length}\n\nStudents Present:\n${presentNames.length ? presentNames.map((n, i) => `${i+1}. ${n}`).join('\n') : '(none)'}`
+        );
+        const mailtoUrl = `mailto:nwalton@svbtennisfoundation.org?cc=kevin@svbtennisfoundation.org&subject=${subject}&body=${body}`;
+        emailReportLink.onclick = () => {
+          const a = document.createElement('a');
+          a.href = mailtoUrl;
+          a.setAttribute('target', '_self');
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => document.body.removeChild(a), 100);
+        };
+      }
+
+      function render() {
+        grid.innerHTML = "";
+        const list = roster.length ? sortRoster(roster) : placeholderCards;
+
+        updateCounter();
+
+        list.forEach((p) => {
+          const pid = p.participant_id;
+          const display = p.display_name || pid;
+          const grade = p.grade || p.Grade || p.GRADE || p.student_grade || "";
+          const st = statusMap[pid]?.status || "none";
+
+          const card = document.createElement("div");
+          let cardClass = "card";
+          if (currentMode === "attendance") {
+            cardClass += st === "in" ? " in" : st === "out" ? " out" : "";
+          } else {
+            const gc = groupColors[pid];
+            if (gc) cardClass += " group-" + gc;
+          }
+          card.className = cardClass;
+
+          const photo = document.createElement("div");
+          photo.className = "photo";
+          const photoUrl = photoOverrides[pid] || p.photo_url || getPhotoByFullName(display);
+          applyPhotoOrInitials(photo, display, photoUrl);
+
+          const gradeEl = document.createElement("div");
+          gradeEl.className = "gradeOverlay";
+          gradeEl.textContent = grade ? "Gr " + grade : "Gr —";
+          photo.appendChild(gradeEl);
+          
+          // Level badge
+          const currentLvl = getLevel(pid);
+          if (currentLvl) {
+            const lvlBadge = document.createElement("div");
+            lvlBadge.className = "levelBadge " + currentLvl;
+            lvlBadge.textContent = currentLvl;
+            card.appendChild(lvlBadge);
+          }
+
+          const name = document.createElement("div");
+          name.className = "name";
+          name.textContent = display;
+
+          const status = document.createElement("div");
+          status.className = "status";
+          if (currentMode === "attendance") {
+            status.textContent =
+              st === "in"
+                ? "HERE"
+                : "Not here yet";
+          } else {
+            const gc = groupColors[pid];
+            status.textContent = gc ? gc.charAt(0).toUpperCase() + gc.slice(1) + " group" : "No group";
+            status.style.color = gc === "green" ? "#2ecc71" : gc === "orange" ? "#f39c12" : gc === "red" ? "#e74c3c" : "";
+          }
+          
+          // Level buttons (only in attendance mode)
+          if (currentMode === "attendance") {
+            const levelBtns = document.createElement("div");
+            levelBtns.className = "levelBtns";
+            ["L1", "L2", "L3"].forEach(lvl => {
+              const btn = document.createElement("button");
+              btn.className = "levelBtn" + (currentLvl === lvl ? " active " + lvl : "");
+              btn.textContent = lvl;
+              btn.onclick = (e) => {
+                e.stopPropagation();
+                if (getLevel(pid) === lvl) {
+                  saveGroupColor(pid, null);
+                } else {
+                  saveGroupColor(pid, lvl);
+                }
+                render();
+              };
+              levelBtns.appendChild(btn);
+            });
+            card.append(photo, name, status, levelBtns);
+          } else {
+            card.append(photo, name, status);
+          }
+
+          card.onclick = () => {
+            if (currentMode === "groups") {
+              if (selectedGroupColor === "none") {
+                saveGroupColor(pid, null);
+              } else if (selectedGroupColor) {
+                const cur = groupColors[pid];
+                if (cur === selectedGroupColor) {
+                  saveGroupColor(pid, null);
+                } else {
+                  saveGroupColor(pid, selectedGroupColor);
+                }
+              } else {
+                const cur = groupColors[pid] || null;
+                const idx = colorCycle.indexOf(cur);
+                const next = colorCycle[(idx + 1) % colorCycle.length];
+                saveGroupColor(pid, next);
+              }
+              render();
+              return;
+            }
+
+            const pin = getPin();
+            if (!pin) { showPinOverlay(); return; }
+            if (cancelBanner.style.display === "block") {
+              alert("This date is cancelled.");
+              return;
+            }
+            if (!roster.length) {
+              alert(
+                "Roster empty. Add participants in the Google Sheet tab named 'rosters' with roster_id = weschapel.",
+              );
+              return;
+            }
+
+            let shouldUpdate = false;
+
+            if (st === "none" || st === "out") {
+              logEvent(pin, {
+                participant_id: pid,
+                action: st === "none" ? "signin" : "resignin",
+                status: "in",
+              });
+              shouldUpdate = true;
+            } else if (st === "in") {
+              logEvent(pin, {
+                participant_id: pid,
+                action: "undo",
+                status: "none",
+              });
+              shouldUpdate = true;
+            }
+
+            if (!shouldUpdate) return;
+
+            const newStatus = {
+              status: st === "in" ? "none" : "in",
+              ts: new Date().toISOString(),
+            };
+            statusMap[pid] = newStatus;
+            localChanges[pid] = newStatus;
+            render();
+            setTimeout(refreshAll, 2000);
+          };
+
+          grid.appendChild(card);
+        });
+      }
+
+      async function refreshAll() {
+        try {
+          const pin = getPin();
+          if (!pin) { showPinOverlay(); return; }
+          dateInfoEl.textContent = "Loading…";
+          const r1 = await loadRoster(pin);
+          if (!r1.ok) {
+            dateInfoEl.textContent = "Roster load failed: " + (r1.error || "unknown");
+            console.log("Roster load failed:", r1.error);
+            return;
+          }
+          const r2 = await loadStatus(pin);
+          if (!r2.ok) {
+            dateInfoEl.textContent = "Status load failed: " + (r2.error || "unknown");
+            console.log("Status load failed:", r2.error);
+            return;
+          }
+          render();
+        } catch (err) {
+          dateInfoEl.textContent = "Error: " + err.message;
+          console.error("refreshAll error:", err);
+        }
+      }
+
+      refreshBtn.onclick = refreshAll;
+      dateEl.onchange = refreshAll;
+
+      // Require PIN entry
+      if (getPin()) {
+        pinOverlay.style.display = "none";
+        refreshAll();
+      } else {
+        showPinOverlay();
+      }
+    </script>
+  </body>
+</html>

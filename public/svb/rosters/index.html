@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SVB Rosters</title>
+  <style>
+    :root{
+      --bg:#07111b; --card:#0f2234; --ink:#eaf2ff; --muted:#b7c7de;
+      --border: rgba(255,255,255,.14);
+    }
+    body{margin:0;font-family:system-ui;background:var(--bg);color:var(--ink)}
+    header{padding:18px 16px;border-bottom:1px solid var(--border);background:rgba(0,0,0,.25);backdrop-filter:blur(10px)}
+    h1{margin:0;font-size:20px}
+    .sub{margin-top:6px;color:var(--muted);font-size:14px}
+    main{padding:18px 16px;max-width:900px;margin:0 auto}
+    .btn{
+      display:block;text-decoration:none;color:var(--ink);
+      border:1px solid var(--border); border-radius:18px;
+      padding:18px 16px; margin:14px 0;
+      background:linear-gradient(135deg, rgba(26,188,156,.18), rgba(52,152,219,.10));
+      box-shadow:0 14px 30px rgba(0,0,0,.35);
+    }
+    .btnTitle{font-size:22px;font-weight:900}
+    .btnSub{margin-top:6px;color:var(--muted);font-size:14px;line-height:1.3}
+    .row{display:grid;grid-template-columns:1fr;gap:14px}
+    @media(min-width:860px){ .row{grid-template-columns:1fr 1fr} }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SVB Rosters</h1>
+    <div class="sub">Today Mode (big photos + live counter). PIN protected.</div>
+  </header>
+
+  <main>
+    <div class="row">
+      <a class="btn" href="/svb/rosters/ambassadors-today.html">
+        <div class="btnTitle">Ambassadors</div>
+        <div class="btnSub">Tap photo to sign in/out · Live “in attendance now”</div>
+      </a>
+
+      <a class="btn" href="/svb/rosters/juniors-today.html">
+        <div class="btnTitle">Junior Ambassadors</div>
+        <div class="btnSub">First names for now · Same sign-in/out workflow</div>
+      </a>
+
+      <a class="btn" href="/svb/rosters/woodland-tiny-tennis-today.html">
+        <div class="btnTitle">Woodland Tiny Tennis</div>
+        <div class="btnSub">First + last names + grade · Sort by name or grade · Compact view</div>
+      </a>
+
+      <a class="btn" href="/svb/rosters/westzephyrhills-today.html">
+        <div class="btnTitle">West Zephyrhills</div>
+        <div class="btnSub">First + last names + grade · Sort by name or grade · Compact view</div>
+      </a>
+
+      <a class="btn" href="/svb/rosters/stewart-today.html">
+        <div class="btnTitle">Stewart Tennis</div>
+        <div class="btnSub">First + last names + grade · Sort by name or grade · Compact view</div>
+      </a>
+
+      <a class="btn" href="/svb/rosters/watergrass-today.html">
+        <div class="btnTitle">Watergrass</div>
+        <div class="btnSub">First + last names + grade · Sort by name or grade · Compact view</div>
+      </a>
+    </div>
+    
+    <div style="margin-top:28px;text-align:center">
+      <a href="https://docs.google.com/spreadsheets/d/1QwTcf4fK2jyynAfDkzPtYzztCTUmsBZflrFxsio5yxE/edit?gid=0#gid=0" 
+         target="_blank" 
+         style="color:var(--muted);font-size:14px;text-decoration:underline">
+        Google Sheets Admin Page
+      </a>
+    </div>
+  </main>
+</body>
+</html>

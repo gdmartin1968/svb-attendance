@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SVB Ambassadors – Attendance</title>
+
+    <style>
+      body {
+        font-family: system-ui;
+        background: #0b1724;
+        color: #ecf0f1;
+        margin: 0;
+      }
+      header {
+        background: #111c2b;
+        padding: 12px;
+        border-bottom: 1px solid #233;
+      }
+      h1 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .sub {
+        font-size: 12px;
+        color: #bcd;
+      }
+
+      main {
+        display: grid;
+        grid-template-columns: 340px 1fr;
+        gap: 12px;
+        padding: 12px;
+      }
+      @media (max-width: 900px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .panel {
+        background: #132338;
+        border: 1px solid #223;
+        border-radius: 14px;
+        padding: 12px;
+      }
+
+      .studentGrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+      }
+      .card {
+        background: #fff;
+        color: #111;
+        border-radius: 14px;
+        cursor: pointer;
+        overflow: hidden;
+      }
+      .card.present {
+        outline: 3px solid #27ae60;
+      }
+      .card.cancelled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .avatar {
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 800;
+        font-size: 22px;
+      }
+      .meta {
+        text-align: center;
+        padding: 6px;
+      }
+      .tag {
+        font-size: 11px;
+        color: #555;
+      }
+
+      .controls {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        font-size: 12px;
+        margin-bottom: 10px;
+      }
+      button,
+      input {
+        padding: 6px 8px;
+        border-radius: 8px;
+        border: none;
+      }
+      button {
+        cursor: pointer;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        background: #fff;
+        color: #111;
+      }
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 6px;
+        text-align: center;
+      }
+      th.sticky,
+      td.sticky {
+        position: sticky;
+        left: 0;
+        background: #fff;
+        font-weight: 700;
+      }
+
+      .statusLine {
+        font-size: 12px;
+        margin-top: 6px;
+        color: #bcd;
+      }
+      .warning {
+        background: #522;
+        color: #ffd7d7;
+        padding: 6px;
+        border-radius: 8px;
+        font-size: 12px;
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <h1>SVB Ambassadors — Attendance</h1>
+      <div class="sub">Fridays 7–9pm · Sundays 2–4pm</div>
+    </header>
+
+    <main>
+      <!-- LEFT -->
+      <section class="panel">
+        <div class="controls">
+          <label>Date <input type="date" id="date" /></label>
+          <button id="checkAll">Check All</button>
+          <button id="clearDay">Clear</button>
+        </div>
+
+        <div id="liveCount" class="statusLine"></div>
+        <div id="cancelBanner" class="warning" style="display: none"></div>
+
+        <div id="students" class="studentGrid"></div>
+      </section>
+
+      <!-- RIGHT -->
+      <section class="panel">
+        <table>
+          <thead>
+            <tr>
+              <th class="sticky">Player</th>
+              <th>Present</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <script>
+      const STORAGE_KEY = "svb_ambassadors_v4";
+
+      const students = [
+        "Ahelia Williams",
+        "Aiden Miller",
+        "Anderson Harris",
+        "Austin Scovill",
+        "Curtis Hogaboam",
+        "Dalton O'Donovan",
+        "Derek Hogaboam",
+        "Ethan Paolantonio",
+        "Immanuel Fair",
+        "Jax Whalen",
+        "Melany Morejo",
+        "Nikki Lang",
+        "Soha Bajaj",
+        "Treye Hochstetler",
+        "Other",
+      ];
+
+      const studentPhotos = {
+        "Dalton O'Donovan": "/photos/ambassadors/dalton.jpg",
+        "Derek Hogaboam": "/photos/ambassadors/derek.jpg",
+        "Curtis Hogaboam": "/photos/ambassadors/curtis.jpg",
+        // Add more as you go:
+        // "Ahelia Williams": "/photos/ambassadors/ahelia.jpg",
+        // "Aiden Miller": "/photos/ambassadors/aiden.jpg",
+      };
+
+      let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      if (!state.data) state.data = {};
+
+      const dInput = document.getElementById("date");
+      dInput.value = new Date().toISOString().slice(0, 10);
+
+      const kAtt = (i, d) => `att_${i}_${d}`;
+      const kStatus = (i, d) => `status_${i}_${d}`;
+      const kIn = (i, d) => `in_${i}_${d}`;
+      const kOut = (i, d) => `out_${i}_${d}`;
+
+      function status(i, d) {
+        return state.data[kStatus(i, d)] || "none";
+      }
+
+      function render() {
+        const d = dInput.value;
+        const grid = document.getElementById("students");
+        const tbody = document.getElementById("tableBody");
+        grid.innerHTML = "";
+        tbody.innerHTML = "";
+
+        let present = 0,
+          inNow = 0;
+
+        students.forEach((name, i) => {
+          const att = !!state.data[kAtt(i, d)];
+          const st = status(i, d);
+          if (att) present++;
+          if (st === "in") inNow++;
+
+          // CARD
+          const card = document.createElement("div");
+          card.className = "card" + (att ? " present" : "");
+          const av = document.createElement("div");
+          av.className = "avatar";
+
+          if (studentPhotos[name]) {
+            av.style.backgroundImage = `url('${studentPhotos[name]}')`;
+            av.style.backgroundSize = "cover";
+            av.style.backgroundPosition = "center";
+            av.textContent = "";
+          } else {
+            av.style.background = `hsl(${(i*45)%360},60%,50%)`;
+            av.textContent = name.split(" ").map(x=>x[0]).join("");
+          }
+          const meta = document.createElement("div");
+          meta.className = "meta";
+          const tag = document.createElement("div");
+          tag.className = "tag";
+          tag.textContent =
+            st === "none"
+              ? "Not logged in"
+              : st === "in"
+                ? "Signed in"
+                : "Signed out";
+          meta.innerHTML = `<b>${name}</b>`;
+          meta.appendChild(tag);
+          card.append(av, meta);
+
+          card.onclick = () => {
+            if (!att) {
+              const f = prompt("How are you feeling?");
+              state.data[kAtt(i, d)] = true;
+              state.data[kStatus(i, d)] = "in";
+              state.data[kIn(i, d)] = new Date().toISOString();
+            } else if (st === "in") {
+              const t = prompt("Biggest takeaway?");
+              state.data[kStatus(i, d)] = "out";
+              state.data[kOut(i, d)] = new Date().toISOString();
+            } else {
+              if (confirm("Re-sign in?")) {
+                state.data[kStatus(i, d)] = "in";
+                state.data[kIn(i, d)] = new Date().toISOString();
+                delete state.data[kOut(i, d)];
+              }
+            }
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            render();
+          };
+
+          grid.append(card);
+
+          // TABLE
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td class="sticky">${name}</td>
+      <td>${att ? "✔" : ""}</td>
+      <td>${st === "none" ? "Not logged in" : st === "in" ? "Signed in" : "Signed out"}</td>`;
+          tbody.append(tr);
+        });
+
+        document.getElementById("liveCount").textContent =
+          `In attendance now: ${inNow} (Present total: ${present})`;
+      }
+
+      document.getElementById("checkAll").onclick = () => {
+        const d = dInput.value;
+        students.forEach((_, i) => {
+          state.data[kAtt(i, d)] = true;
+          state.data[kStatus(i, d)] = "in";
+          state.data[kIn(i, d)] = new Date().toISOString();
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        render();
+      };
+
+      document.getElementById("clearDay").onclick = () => {
+        const d = dInput.value;
+        students.forEach((_, i) => {
+          delete state.data[kAtt(i, d)];
+          delete state.data[kStatus(i, d)];
+          delete state.data[kIn(i, d)];
+          delete state.data[kOut(i, d)];
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        render();
+      };
+
+      dInput.onchange = render;
+      render();
+    </script>
+  </body>
+</html>

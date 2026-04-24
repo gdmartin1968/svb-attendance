@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Junior Ambassadors — Today</title>
+    <style>
+      :root {
+        --bg: #07111b;
+        --ink: #eaf2ff;
+        --muted: #b7c7de;
+        --border: rgba(255, 255, 255, 0.14);
+        --card: #ffffff;
+        --cardInk: #111;
+        --in: #27ae60;
+        --out: #3498db;
+        --warnBg: rgba(192, 57, 43, 0.18);
+        --warnBd: rgba(192, 57, 43, 0.35);
+      }
+      body {
+        margin: 0;
+        font-family: system-ui;
+        background: var(--bg);
+        color: var(--ink);
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border);
+        padding: 12px 12px 10px;
+      }
+      .topbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+      }
+      h1 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .counterBig {
+        margin-top: 10px;
+        padding: 24px 28px;
+        background: linear-gradient(135deg, #1e8449 0%, #145a32 100%);
+        border: 4px solid #2ecc71;
+        border-radius: 18px;
+        font-size: 32px;
+        font-weight: 900;
+        text-align: center;
+        color: #fff;
+        box-shadow: 0 8px 32px rgba(46, 204, 113, 0.4), inset 0 2px 4px rgba(255,255,255,0.2);
+        text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        letter-spacing: 0.02em;
+      }
+      .counterBig .nums {
+        font-size: 72px;
+        display: block;
+        line-height: 1;
+        margin-bottom: 8px;
+        text-shadow: 0 4px 16px rgba(0,0,0,0.6);
+      }
+      .modeBar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      .modeBtn {
+        padding: 8px 18px;
+        border-radius: 10px;
+        border: 2px solid var(--border);
+        background: rgba(255,255,255,0.08);
+        color: var(--ink);
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .modeBtn.active {
+        background: linear-gradient(135deg, #1abc9c, #16a085);
+        border-color: #1abc9c;
+      }
+      .colorBar {
+        display: none;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 8px;
+      }
+      .colorBar.visible { display: flex; }
+      .colorChoice {
+        padding: 6px 16px;
+        border-radius: 8px;
+        border: 2px solid transparent;
+        font-size: 16px;
+        font-weight: 900;
+        cursor: pointer;
+        background: rgba(255,255,255,0.1);
+        letter-spacing: 0.04em;
+      }
+      .colorChoice.green { color: #2ecc71; }
+      .colorChoice.orange { color: #f39c12; }
+      .colorChoice.red { color: #e74c3c; }
+      .colorChoice.none { background: #111; color: #fff; border: 2px solid #555; }
+      .colorChoice.selected { border-color: #fff; background: rgba(255,255,255,0.25); }
+      .colorChoice.none.selected { border-color: #fff; background: #333; }
+      .clearAllBtn {
+        padding: 6px 14px;
+        border-radius: 8px;
+        border: 2px solid rgba(192,57,43,0.5);
+        background: rgba(192,57,43,0.2);
+        color: #ffd7d7;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-left: 8px;
+      }
+      .card.group-green { border-color: #2ecc71; box-shadow: 0 0 16px rgba(46,204,113,0.5); }
+      .card.group-orange { border-color: #f39c12; box-shadow: 0 0 16px rgba(243,156,18,0.5); }
+      .card.group-red { border-color: #e74c3c; box-shadow: 0 0 16px rgba(231,76,60,0.5); }
+      .pill {
+        margin-top: 6px;
+        color: #cfe;
+        font-size: 14px;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      input,
+      button,
+      a.smallLink {
+        font-size: 14px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--ink);
+      }
+      button {
+        cursor: pointer;
+      }
+      button.primary {
+        border: none;
+        background: linear-gradient(135deg, #1abc9c, #16a085);
+      }
+      a.smallLink {
+        display: inline-block;
+        text-decoration: underline;
+        color: #aee;
+      }
+      .warn {
+        display: none;
+        margin-top: 8px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        font-size: 14px;
+        background: var(--warnBg);
+        border: 1px solid var(--warnBd);
+        color: #ffd7d7;
+      }
+      main {
+        padding: 12px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .grid {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+      @media (max-width: 520px) {
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      @media (min-width: 600px) and (max-width: 980px) {
+        .grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+      @media (min-width: 981px) {
+        .grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+      }
+
+      .card {
+        background: var(--card);
+        color: var(--cardInk);
+        border-radius: 18px;
+        overflow: hidden;
+        border: 4px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+        cursor: pointer;
+        user-select: none;
+      }
+      .card.in {
+        border-color: color-mix(in srgb, var(--in) 85%, white);
+      }
+      .card.out {
+        border-color: color-mix(in srgb, var(--out) 85%, white);
+      }
+      .photo {
+        height: 230px;
+        background: radial-gradient(circle at 30% 20%, #3a6ea5, #1a2f44);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 900;
+        font-size: 52px;
+        letter-spacing: 0.06em;
+        background-size: cover;
+        background-position: center;
+      }
+      .name {
+        padding: 10px 12px 4px;
+        font-weight: 900;
+        font-size: 18px;
+      }
+      .status {
+        padding: 0 12px 14px;
+        font-size: 14px;
+        color: #444;
+      }
+
+      .overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(6px);
+        padding: 16px;
+      }
+      .modal {
+        width: min(520px, 100%);
+        background: #0f2234;
+        color: var(--ink);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 16px 16px 14px;
+        box-shadow: 0 22px 50px rgba(0, 0, 0, 0.6);
+      }
+      .modal h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .modal p {
+        margin: 10px 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.35;
+      }
+      .modal .row2 {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 10px;
+      }
+      .modal input {
+        flex: 1;
+        min-width: 180px;
+        font-size: 18px;
+        padding: 12px 12px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--ink);
+      }
+      .error {
+        margin-top: 10px;
+        color: #ffd1d1;
+        font-size: 14px;
+        display: none;
+      }
+      .hint {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="topbar">
+        <div>
+          <h1>Junior Ambassadors — Today</h1>
+          <div class="pill" id="counter">Loading…</div>
+        </div>
+        <div class="counterBig" id="counterTop">
+          <span class="nums" id="counterTopNums">--</span> in attendance now
+        </div>
+        <div class="row">
+          <input id="date" type="date" />
+          <button class="primary" id="refresh">Refresh</button>
+          <a class="smallLink" href="/svb/rosters/juniors-history.html"
+            >History view</a
+          >
+          <a class="smallLink" href="/svb/rosters/index.html">Menu</a>
+        </div>
+      </div>
+      <div class="modeBar">
+        <button class="modeBtn active" id="modeAttendance">Attendance</button>
+        <button class="modeBtn" id="modeGroups">Groups</button>
+        <span style="margin-left: 16px;">|</span>
+        <button id="emailReport" style="background: none; border: none; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; padding: 0;">Email Report</button>
+      </div>
+      <div class="colorBar" id="colorBar">
+        <span class="colorChoice green" data-color="green">GREEN</span>
+        <span class="colorChoice orange" data-color="orange">ORANGE</span>
+        <span class="colorChoice red" data-color="red">RED</span>
+        <span class="colorChoice none" data-color="none">NONE</span>
+        <button class="clearAllBtn" id="clearAllLevels">Clear All Levels</button>
+      </div>
+      <div class="warn" id="cancelBanner"></div>
+    </header>
+
+    <main>
+      <div class="grid" id="grid"></div>
+    </main>
+
+    <div class="overlay" id="pinOverlay">
+      <div class="modal">
+        <h2>Enter coach PIN</h2>
+        <p>PIN is required to load and record today’s attendance.</p>
+        <div class="row2">
+          <input
+            id="pinInput"
+            type="password"
+            inputmode="numeric"
+            maxlength="6"
+            placeholder="PIN (e.g., 5665)"
+          />
+          <button class="primary" id="pinGo">Unlock</button>
+          <button id="pinClear">Clear</button>
+        </div>
+        <div class="error" id="pinError">Wrong PIN. Try again.</div>
+        <div class="hint">PIN is stored only in this browser session.</div>
+      </div>
+    </div>
+
+    <script>
+      /* ====== CONFIG ====== */
+      const SCRIPT_URL =
+        "https://script.google.com/macros/s/AKfycbznvlI35ckcTD4jyLNhtokbPW58Ug4Xn5NRvbBL8VjvzUCorEg2VWPYjdUuPSFxEddt/exec";
+      const ROSTER_ID = "juniors";
+      const TZ_LABEL = "America/New_York";
+
+      // Auto-map photos by first name from /photos/juniors/ folder (all lowercase)
+      // To add a new kid: 1) Add photo as firstname.jpg (lowercase) to /photos/juniors/
+      //                   2) Add 'firstname' to this array below
+      const juniorPhotos = [
+        'aaliyah', 'abby', 'audrey', 'chloe', 'emin', 'evan', 'gwen', 
+        'haven', 'india', 'isabella', 'lincoln', 'lucas', 'maddox', 'teresa', 'william', 'xander'
+      ];
+      
+      // Custom position overrides for specific photos (use 'center X%')
+      // Higher % shows more of the BOTTOM of the photo (use when face is low in image)
+      // Lower % shows more of the TOP of the photo (use when face is high in image)
+      // 0% = anchor to top, 50% = center, 100% = anchor to bottom
+      const photoPositionOverrides = {
+        'abby': 'center 80%'
+      };
+      
+      function getPhotoByFirstName(displayName) {
+        const firstName = displayName.split(/\s+/)[0].toLowerCase();
+        const match = juniorPhotos.find(name => name === firstName);
+        return match ? `/photos/juniors/${match}.jpg` : '';
+      }
+      
+      function getPhotoPosition(displayName) {
+        const firstName = displayName.split(/\s+/)[0].toLowerCase();
+        return photoPositionOverrides[firstName] || 'center 20%';
+      }
+      
+      const photoOverrides = {};
+
+      const placeholderCards = [
+        {
+          participant_id: "placeholder_1",
+          display_name: "Add junior roster",
+          photo_url: "",
+        },
+        {
+          participant_id: "placeholder_2",
+          display_name: "in Google Sheet",
+          photo_url: "",
+        },
+        {
+          participant_id: "placeholder_3",
+          display_name: "Tab: rosters",
+          photo_url: "",
+        },
+      ];
+
+      /* ====== DOM ====== */
+      const el = (id) => document.getElementById(id);
+      const grid = el("grid");
+      const dateEl = el("date");
+      const refreshBtn = el("refresh");
+      const counterEl = el("counter");
+      const counterTopNums = el("counterTopNums");
+      const cancelBanner = el("cancelBanner");
+
+      const modeAttendanceBtn = el("modeAttendance");
+      const modeGroupsBtn = el("modeGroups");
+      const colorBar = el("colorBar");
+      const clearAllLevelsBtn = el("clearAllLevels");
+      const emailReportLink = el("emailReport");
+
+      let currentMode = "attendance";
+      let selectedGroupColor = null;
+      const GROUP_KEY = "svb_groups_juniors";
+      let groupColors = JSON.parse(localStorage.getItem(GROUP_KEY) || "{}");
+      function saveGroupColor(pid, color) {
+        if (color) { groupColors[pid] = color; } else { delete groupColors[pid]; }
+        localStorage.setItem(GROUP_KEY, JSON.stringify(groupColors));
+        syncGroupColorsToServer();
+      }
+      let syncTimer = null;
+      function syncGroupColorsToServer() {
+        clearTimeout(syncTimer);
+        syncTimer = setTimeout(() => {
+          fetch("/api/svb/groups/juniors", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(groupColors),
+          }).catch(() => {});
+        }, 500);
+      }
+      function loadGroupColorsFromServer() {
+        fetch("/api/svb/groups/juniors")
+          .then(r => r.json())
+          .then(data => {
+            if (data && typeof data === "object") {
+              groupColors = data;
+              localStorage.setItem(GROUP_KEY, JSON.stringify(groupColors));
+              render();
+            }
+          }).catch(() => {});
+      }
+      loadGroupColorsFromServer();
+      const colorCycle = [null, "green", "orange", "red"];
+
+      modeAttendanceBtn.onclick = () => {
+        currentMode = "attendance";
+        modeAttendanceBtn.classList.add("active");
+        modeGroupsBtn.classList.remove("active");
+        colorBar.classList.remove("visible");
+        selectedGroupColor = null;
+        document.querySelectorAll(".colorChoice").forEach(c => c.classList.remove("selected"));
+        render();
+      };
+      modeGroupsBtn.onclick = () => {
+        currentMode = "groups";
+        modeGroupsBtn.classList.add("active");
+        modeAttendanceBtn.classList.remove("active");
+        colorBar.classList.add("visible");
+        render();
+      };
+      document.querySelectorAll(".colorChoice").forEach(choice => {
+        choice.onclick = () => {
+          const c = choice.dataset.color;
+          if (selectedGroupColor === c) {
+            selectedGroupColor = null;
+            choice.classList.remove("selected");
+          } else {
+            selectedGroupColor = c;
+            document.querySelectorAll(".colorChoice").forEach(x => x.classList.remove("selected"));
+            choice.classList.add("selected");
+          }
+        };
+      });
+      clearAllLevelsBtn.onclick = () => {
+        if (confirm("Clear all group levels?")) {
+          groupColors = {};
+          localStorage.setItem(GROUP_KEY, JSON.stringify(groupColors));
+          syncGroupColorsToServer();
+          render();
+        }
+      };
+
+      const pinOverlay = el("pinOverlay");
+      const pinInput = el("pinInput");
+      const pinGo = el("pinGo");
+      const pinClear = el("pinClear");
+      const pinError = el("pinError");
+
+      /* ====== SESSION PIN ====== */
+      const PIN_SESSION_KEY = "svb_pin_session";
+      function getPin() {
+        return sessionStorage.getItem(PIN_SESSION_KEY) || "";
+      }
+      function setPin(v) {
+        sessionStorage.setItem(PIN_SESSION_KEY, v);
+      }
+      function clearPin() {
+        sessionStorage.removeItem(PIN_SESSION_KEY);
+      }
+
+      dateEl.value = new Date().toISOString().slice(0, 10);
+
+      /* ====== JSONP helper (avoids CORS) ====== */
+      function jsonp(url, cbName, onDone) {
+        const s = document.createElement("script");
+        s.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cbName;
+        s.onerror = () => {
+          s.remove();
+          onDone({ ok: false, error: "network" });
+        };
+        window[cbName] = (data) => {
+          try {
+            onDone(data);
+          } finally {
+            delete window[cbName];
+            s.remove();
+          }
+        };
+        document.body.appendChild(s);
+      }
+      function qs(obj) {
+        return Object.keys(obj)
+          .map(
+            (k) =>
+              encodeURIComponent(k) + "=" + encodeURIComponent(obj[k] ?? ""),
+          )
+          .join("&");
+      }
+      function deviceLabel() {
+        const ua = navigator.userAgent || "";
+        return ua.slice(0, 80);
+      }
+      function initials(name) {
+        return name
+          .split(/\s+/)
+          .filter(Boolean)
+          .map((x) => x[0])
+          .join("")
+          .slice(0, 3)
+          .toUpperCase();
+      }
+
+      /* ====== Photo fallback + cache (UPGRADE A) ====== */
+      const photoLoadCache = {}; // url -> true/false
+      function applyPhotoOrInitials(photoEl, displayName, photoUrl) {
+        // Default: show initials with gradient background
+        photoEl.style.backgroundImage = "";
+        photoEl.textContent = initials(displayName);
+        if (!photoUrl) return;
+
+        const position = getPhotoPosition(displayName);
+
+        // Check cache first
+        if (photoLoadCache[photoUrl] === true) {
+          photoEl.style.backgroundImage = `url('${photoUrl}')`;
+          photoEl.style.backgroundPosition = position;
+          photoEl.textContent = "";
+          return;
+        }
+        if (photoLoadCache[photoUrl] === false) {
+          return; // Keep initials
+        }
+
+        // Load image and verify it exists
+        const img = new Image();
+        img.onload = () => {
+          photoLoadCache[photoUrl] = true;
+          photoEl.style.backgroundImage = `url('${photoUrl}')`;
+          photoEl.style.backgroundPosition = position;
+          photoEl.textContent = "";
+        };
+        img.onerror = () => {
+          photoLoadCache[photoUrl] = false;
+          // Keep initials (already set above)
+        };
+        img.src = photoUrl;
+      }
+
+      /* ====== Data ====== */
+      let roster = [];
+      let statusMap = {};
+      let localChanges = {}; // Track local changes with timestamps to preserve through refreshes
+
+      /* ====== PIN gate ====== */
+      async function verifyPin(pin) {
+        return new Promise((resolve) => {
+          const url =
+            SCRIPT_URL +
+            "?" +
+            qs({ action: "roster", pin, roster_id: ROSTER_ID });
+          jsonp(url, "cb_pin_" + Date.now(), (data) => resolve(!!data.ok));
+        });
+      }
+      function showPinOverlay() {
+        pinOverlay.style.display = "flex";
+        pinError.style.display = "none";
+        pinInput.value = "";
+        pinInput.focus();
+      }
+      function hidePinOverlay() {
+        pinOverlay.style.display = "none";
+      }
+
+      pinGo.onclick = async () => {
+        const pin = pinInput.value.trim();
+        pinError.style.display = "none";
+        if (!pin) {
+          pinError.textContent = "Enter PIN.";
+          pinError.style.display = "block";
+          return;
+        }
+        const ok = await verifyPin(pin);
+        if (!ok) {
+          pinError.textContent = "Wrong PIN. Try again.";
+          pinError.style.display = "block";
+          return;
+        }
+        setPin(pin);
+        hidePinOverlay();
+        refreshAll();
+      };
+      pinClear.onclick = () => {
+        pinInput.value = "";
+        pinInput.focus();
+      };
+
+      document.addEventListener("keydown", (e) => {
+        if (pinOverlay.style.display !== "none" && e.key === "Enter")
+          pinGo.click();
+      });
+
+      /* ====== Loaders ====== */
+      function loadRoster(pin) {
+        return new Promise((resolve) => {
+          const url =
+            SCRIPT_URL +
+            "?" +
+            qs({ action: "roster", pin, roster_id: ROSTER_ID });
+          jsonp(url, "cb_roster_" + Date.now(), (data) => {
+            if (!data.ok) {
+              resolve({ ok: false, error: data.error || "roster_failed" });
+              return;
+            }
+            roster = (data.participants || []).filter(
+              (p) => p && p.participant_id,
+            );
+            resolve({ ok: true });
+          });
+        });
+      }
+      function loadStatus(pin) {
+        return new Promise((resolve) => {
+          const date_iso = dateEl.value;
+          const url =
+            SCRIPT_URL +
+            "?" +
+            qs({ action: "status", pin, roster_id: ROSTER_ID, date_iso });
+          jsonp(url, "cb_status_" + Date.now(), (data) => {
+            if (!data.ok) {
+              resolve({ ok: false, error: data.error || "status_failed" });
+              return;
+            }
+            const serverStatus = data.by_participant || {};
+            // Merge server data with local changes - keep local if newer
+            statusMap = {};
+            Object.keys(serverStatus).forEach(pid => {
+              const serverTs = new Date(serverStatus[pid]?.ts || 0).getTime();
+              const localTs = new Date(localChanges[pid]?.ts || 0).getTime();
+              if (localTs > serverTs) {
+                statusMap[pid] = localChanges[pid];
+              } else {
+                statusMap[pid] = serverStatus[pid];
+                // Server caught up, remove from local tracking
+                delete localChanges[pid];
+              }
+            });
+            // Add any local changes for participants not in server response
+            Object.keys(localChanges).forEach(pid => {
+              if (!statusMap[pid]) {
+                statusMap[pid] = localChanges[pid];
+              }
+            });
+            const cancelled = data.cancelled_reason || "";
+            if (cancelled) {
+              cancelBanner.style.display = "block";
+              cancelBanner.textContent = "Cancelled training: " + cancelled;
+            } else {
+              cancelBanner.style.display = "none";
+              cancelBanner.textContent = "";
+            }
+            // Counter will be updated by render() from local statusMap
+            resolve({ ok: true });
+          });
+        });
+      }
+      function logEvent(pin, payload) {
+        const url =
+          SCRIPT_URL +
+          "?" +
+          qs(
+            Object.assign(
+              {
+                action: "log",
+                pin,
+                roster_id: ROSTER_ID,
+                date_iso: dateEl.value,
+                device: deviceLabel(),
+                actor: "coach",
+              },
+              payload,
+            ),
+          );
+        const img = new Image();
+        img.src = url;
+      }
+
+      /* ====== UI ====== */
+      function updateCounter() {
+        const list = roster.length ? roster : [];
+        let inNow = 0;
+        let presentTotal = 0;
+        const presentNames = [];
+        list.forEach((p) => {
+          const st = statusMap[p.participant_id]?.status || "none";
+          if (st === "in") {
+            inNow++;
+            presentTotal++;
+            presentNames.push(p.display_name || p.participant_id);
+          } else if (st === "out") {
+            presentTotal++;
+            presentNames.push(p.display_name || p.participant_id);
+          }
+        });
+        const date_iso = dateEl.value;
+        counterEl.textContent = `In attendance now: ${inNow}  •  Present total: ${presentTotal}  •  Date: ${date_iso}  •  ${TZ_LABEL}`;
+        counterTopNums.textContent = inNow;
+
+        const subject = encodeURIComponent(
+          `Junior Ambassadors Attendance Report - ${date_iso}`
+        );
+        const body = encodeURIComponent(
+          `Junior Ambassadors Attendance Report\nDate: ${date_iso}\n\nIn Attendance Now: ${inNow}\nTotal Present (including signed out): ${presentTotal}\nTotal Roster: ${list.length}\n\nStudents Present:\n${presentNames.length ? presentNames.map((n, i) => `${i+1}. ${n}`).join('\n') : '(none)'}`
+        );
+        const mailtoUrl = `mailto:nwalton@svbtennisfoundation.org?cc=mytournamentdirector@gmail.com&subject=${subject}&body=${body}`;
+        emailReportLink.onclick = () => {
+          const a = document.createElement('a');
+          a.href = mailtoUrl;
+          a.setAttribute('target', '_self');
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => document.body.removeChild(a), 100);
+        };
+      }
+      
+      function render() {
+        grid.innerHTML = "";
+        const list = roster.length ? roster : placeholderCards;
+        
+        updateCounter();
+
+        list.forEach((p) => {
+          const pid = p.participant_id;
+          const display = p.display_name || pid;
+          const st = statusMap[pid]?.status || "none";
+
+          const card = document.createElement("div");
+          let cardClass = "card";
+          if (currentMode === "attendance") {
+            cardClass += st === "in" ? " in" : st === "out" ? " out" : "";
+          } else {
+            const gc = groupColors[pid];
+            if (gc) cardClass += " group-" + gc;
+          }
+          card.className = cardClass;
+
+          const photo = document.createElement("div");
+          photo.className = "photo";
+          const photoUrl = photoOverrides[pid] || p.photo_url || getPhotoByFirstName(display);
+          applyPhotoOrInitials(photo, display, photoUrl);
+
+          const name = document.createElement("div");
+          name.className = "name";
+          name.textContent = display;
+
+          const status = document.createElement("div");
+          status.className = "status";
+          if (currentMode === "attendance") {
+            status.textContent =
+              st === "none"
+                ? "Not logged in"
+                : st === "in"
+                  ? "Signed in (not signed out)"
+                  : "Signed out";
+          } else {
+            const gc = groupColors[pid];
+            status.textContent = gc ? gc.charAt(0).toUpperCase() + gc.slice(1) + " group" : "No group";
+            status.style.color = gc === "green" ? "#2ecc71" : gc === "orange" ? "#f39c12" : gc === "red" ? "#e74c3c" : "";
+          }
+
+          card.append(photo, name, status);
+
+          card.onclick = () => {
+            if (currentMode === "groups") {
+              if (selectedGroupColor === "none") {
+                saveGroupColor(pid, null);
+              } else if (selectedGroupColor) {
+                const cur = groupColors[pid];
+                if (cur === selectedGroupColor) {
+                  saveGroupColor(pid, null);
+                } else {
+                  saveGroupColor(pid, selectedGroupColor);
+                }
+              } else {
+                const cur = groupColors[pid] || null;
+                const idx = colorCycle.indexOf(cur);
+                const next = colorCycle[(idx + 1) % colorCycle.length];
+                saveGroupColor(pid, next);
+              }
+              render();
+              return;
+            }
+
+            const pin = getPin();
+            if (!pin) {
+              showPinOverlay();
+              return;
+            }
+            if (cancelBanner.style.display === "block") {
+              alert("This training date is cancelled.");
+              return;
+            }
+            if (!roster.length) {
+              alert(
+                "Roster empty. Add participants in the Google Sheet tab named 'rosters'.",
+              );
+              return;
+            }
+
+            let shouldUpdate = false;
+            
+            if (st === "none") {
+              logEvent(pin, {
+                participant_id: pid,
+                action: "signin",
+                status: "in",
+                feeling: "",
+              });
+              shouldUpdate = true;
+            } else if (st === "in") {
+              const takeaway = prompt(
+                "What's your biggest takeaway from this training session?",
+              );
+              if (takeaway === null) return;
+              logEvent(pin, {
+                participant_id: pid,
+                action: "signout",
+                status: "out",
+                takeaway: takeaway.slice(0, 200),
+              });
+              shouldUpdate = true;
+            } else {
+              if (confirm("They are signed out. Sign them in again?")) {
+                logEvent(pin, {
+                  participant_id: pid,
+                  action: "resignin",
+                  status: "in",
+                });
+                shouldUpdate = true;
+              }
+            }
+
+            if (!shouldUpdate) return;
+            
+            const newStatus = {
+              status: st === "in" ? "out" : "in",
+              ts: new Date().toISOString(),
+            };
+            statusMap[pid] = newStatus;
+            localChanges[pid] = newStatus;
+            render();
+            setTimeout(refreshAll, 2000);
+          };
+
+          grid.appendChild(card);
+        });
+      }
+
+      async function refreshAll() {
+        const pin = getPin();
+        if (!pin) {
+          showPinOverlay();
+          return;
+        }
+        counterEl.textContent = "Loading…";
+        const r1 = await loadRoster(pin);
+        if (!r1.ok) {
+          counterEl.textContent = "Roster load failed.";
+          showPinOverlay();
+          return;
+        }
+        const r2 = await loadStatus(pin);
+        if (!r2.ok) {
+          counterEl.textContent = "Status load failed.";
+          showPinOverlay();
+          return;
+        }
+        render();
+      }
+
+      refreshBtn.onclick = refreshAll;
+      dateEl.onchange = refreshAll;
+
+      if (getPin()) {
+        pinOverlay.style.display = "none";
+        refreshAll();
+      } else {
+        showPinOverlay();
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SVB Junior Ambassadors – Attendance</title>
+
+<style>
+body{font-family:system-ui;background:#0b1724;color:#ecf0f1;margin:0}
+header{background:#111c2b;padding:12px;border-bottom:1px solid #233}
+h1{margin:0;font-size:18px}
+.sub{font-size:12px;color:#bcd}
+
+main{display:grid;grid-template-columns:340px 1fr;gap:12px;padding:12px}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+
+.panel{background:#132338;border:1px solid #223;border-radius:14px;padding:12px}
+
+.studentGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.card{background:#fff;color:#111;border-radius:14px;cursor:pointer;overflow:hidden}
+.card.present{outline:3px solid #27ae60}
+.card.cancelled{opacity:.4;cursor:not-allowed}
+
+.avatar{height:70px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:22px}
+.meta{text-align:center;padding:6px}
+.tag{font-size:11px;color:#555}
+
+.controls{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;margin-bottom:10px}
+button,input{padding:6px 8px;border-radius:8px;border:none}
+button{cursor:pointer}
+
+table{width:100%;border-collapse:collapse;font-size:12px;background:#fff;color:#111}
+th,td{border:1px solid #ccc;padding:6px;text-align:center}
+th.sticky,td.sticky{position:sticky;left:0;background:#fff;font-weight:700}
+
+.statusLine{font-size:12px;margin-top:6px;color:#bcd}
+.warning{background:#522;color:#ffd7d7;padding:6px;border-radius:8px;font-size:12px;margin-top:8px}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>SVB Junior Ambassadors — Attendance</h1>
+  <div class="sub">Sundays 12–2pm (Zephyr Park)</div>
+</header>
+
+<main>
+<!-- LEFT -->
+<section class="panel">
+  <div class="controls">
+    <label>Date <input type="date" id="date"></label>
+    <button id="checkAll">Check All</button>
+    <button id="clearDay">Clear</button>
+  </div>
+
+  <div id="liveCount" class="statusLine"></div>
+  <div id="cancelBanner" class="warning" style="display:none"></div>
+
+  <div id="students" class="studentGrid"></div>
+</section>
+
+<!-- RIGHT -->
+<section class="panel">
+  <table>
+    <thead><tr><th class="sticky">Player</th><th>Present</th><th>Status</th></tr></thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</section>
+</main>
+
+<script>
+/* ========= STORAGE ========= */
+const STORAGE_KEY="svb_junior_ambassadors_v4";
+
+/* ========= ROSTER ========= */
+/* No last names for now (as requested). You can edit names here later. */
+const students=[
+  "Abby","Bradley","Gwen","Isabella","Lucas","Sadie","Teresa","William",
+  "Evan","Maddox","Chloe","Max","Owen","Emin"
+];
+
+/* ========= STATE ========= */
+let state=JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}");
+if(!state.data)state.data={};
+
+const dInput=document.getElementById("date");
+dInput.value=new Date().toISOString().slice(0,10);
+
+/* ========= KEYS ========= */
+const kAtt    =(i,d)=>`att_${i}_${d}`;
+const kStatus =(i,d)=>`status_${i}_${d}`; // "none" | "in" | "out"
+const kInTime =(i,d)=>`in_${i}_${d}`;
+const kOutTime=(i,d)=>`out_${i}_${d}`;
+
+/* Optional prompts (stored but not displayed on main grid — we can add later) */
+const kFeel   =(i,d)=>`feel_${i}_${d}`;
+const kTake   =(i,d)=>`take_${i}_${d}`;
+
+function status(i,d){ return state.data[kStatus(i,d)] || "none"; }
+
+function initials(name){
+  return name.split(" ").filter(Boolean).map(x=>x[0]).join("").slice(0,3).toUpperCase();
+}
+
+function save(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function render(){
+  const d=dInput.value;
+  const grid=document.getElementById("students");
+  const tbody=document.getElementById("tableBody");
+  grid.innerHTML=""; tbody.innerHTML="";
+
+  let presentTotal=0;
+  let signedInNow=0;
+
+  students.forEach((name,i)=>{
+    const present=!!state.data[kAtt(i,d)];
+    const st=status(i,d);
+
+    if(present) presentTotal++;
+    if(st==="in") signedInNow++;
+
+    // CARD
+    const card=document.createElement("div");
+    card.className="card"+(present?" present":"");
+
+    const av=document.createElement("div");
+    av.className="avatar";
+    av.style.background=`hsl(${(i*45)%360},60%,50%)`;
+    av.textContent=initials(name);
+
+    const meta=document.createElement("div");
+    meta.className="meta";
+    const tag=document.createElement("div");
+    tag.className="tag";
+    tag.textContent = st==="none" ? "Not logged in" : (st==="in" ? "Signed in (not signed out)" : "Signed out");
+
+    meta.innerHTML = `<b>${name}</b>`;
+    meta.appendChild(tag);
+
+    card.append(av,meta);
+
+    card.onclick=()=>{
+      // Tap flow:
+      // - Not present OR status none => sign in
+      // - status in => sign out (keep present)
+      // - status out => re-sign in (confirm)
+      if(!present || st==="none"){
+        const f=prompt("How are you feeling?\n[How prepared are you to learn and improve?]");
+        if(f!==null){
+          const trimmed=f.trim().slice(0,200);
+          if(trimmed) state.data[kFeel(i,d)] = trimmed;
+        }
+        state.data[kAtt(i,d)] = true;
+        state.data[kStatus(i,d)] = "in";
+        state.data[kInTime(i,d)] = new Date().toISOString();
+        delete state.data[kOutTime(i,d)];
+      } else if(st==="in"){
+        const t=prompt("What's your biggest takeaway from this training session?");
+        if(t!==null){
+          const trimmed=t.trim().slice(0,200);
+          if(trimmed) state.data[kTake(i,d)] = trimmed;
+        }
+        state.data[kStatus(i,d)] = "out";
+        state.data[kOutTime(i,d)] = new Date().toISOString();
+        // Note: we KEEP kAtt true so they remain counted as present
+      } else {
+        if(confirm("They are already signed out. Sign them in again?")){
+          state.data[kStatus(i,d)]="in";
+          state.data[kInTime(i,d)] = new Date().toISOString();
+          delete state.data[kOutTime(i,d)];
+        }
+      }
+
+      save();
+      render();
+    };
+
+    grid.append(card);
+
+    // TABLE
+    const tr=document.createElement("tr");
+    tr.innerHTML = `
+      <td class="sticky">${name}</td>
+      <td>${present ? "✔" : ""}</td>
+      <td>${st==="none" ? "Not logged in" : (st==="in" ? "Signed in" : "Signed out")}</td>
+    `;
+    tbody.append(tr);
+  });
+
+  document.getElementById("liveCount").textContent =
+    `In attendance now: ${signedInNow} (Present total: ${presentTotal})`;
+}
+
+document.getElementById("checkAll").onclick=()=>{
+  const d=dInput.value;
+  students.forEach((_,i)=>{
+    state.data[kAtt(i,d)] = true;
+    state.data[kStatus(i,d)] = "in";
+    state.data[kInTime(i,d)] = new Date().toISOString();
+    delete state.data[kOutTime(i,d)];
+  });
+  save();
+  render();
+};
+
+document.getElementById("clearDay").onclick=()=>{
+  const d=dInput.value;
+  if(!confirm("Clear all attendance + status for this date?")) return;
+  students.forEach((_,i)=>{
+    delete state.data[kAtt(i,d)];
+    delete state.data[kStatus(i,d)];
+    delete state.data[kInTime(i,d)];
+    delete state.data[kOutTime(i,d)];
+    delete state.data[kFeel(i,d)];
+    delete state.data[kTake(i,d)];
+  });
+  save();
+  render();
+};
+
+dInput.onchange=render;
+render();
+</script>
+
+</body>
+</html>
