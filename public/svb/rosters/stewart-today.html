@@ -9,6 +9,10 @@
     />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
+    <link
+  rel="icon"
+  href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307111b'/%3E%3Ccircle cx='21' cy='22' r='7' fill='%232ecc71'/%3E%3Ccircle cx='43' cy='22' r='7' fill='%233498db'/%3E%3Cpath d='M12 47c2-10 16-10 18 0' fill='none' stroke='%23ffffff' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M34 47c2-10 16-10 18 0' fill='none' stroke='%23ffffff' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M18 34h28' stroke='%23f39c12' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E"
+/>
     <title>Stewart Tennis — Today</title>
     <style>
       :root {
@@ -395,6 +399,56 @@
         color: #666;
       }
 
+      .coachSection {
+        margin-top: 18px;
+      }
+      .coachSectionTitle {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--muted);
+        margin-bottom: 8px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .coachRow {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+      }
+      .coachChip {
+        flex: 0 0 auto;
+        min-width: 130px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+      }
+      .coachChip.present {
+        background: linear-gradient(135deg, #27ae60, #1e8449);
+        border-color: #2ecc71;
+        box-shadow: 0 0 14px rgba(46, 204, 113, 0.45);
+      }
+      .coachDot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.35);
+      }
+      .coachChip.present .coachDot {
+        background: #fff;
+      }
+
       .overlay {
         position: fixed;
         inset: 0;
@@ -530,6 +584,11 @@
 
     <main>
       <div class="grid" id="grid"></div>
+
+      <section class="coachSection">
+        <div class="coachSectionTitle">Coaches</div>
+        <div class="coachRow" id="coachRow"></div>
+      </section>
     </main>
 
     <div class="overlay" id="pinOverlay">
@@ -568,6 +627,8 @@
       const ROSTER_ID = "stewart_tennis";
       const TZ_LABEL = "America/New_York";
 
+      const COACHES = ["Gordon", "Kevin", "Other"];
+
       const photoOverrides = {};
 
       const placeholderCards = [
@@ -594,6 +655,7 @@
       /* ====== DOM ====== */
       const el = (id) => document.getElementById(id);
       const grid = el("grid");
+      const coachRow = el("coachRow");
       const dateEl = el("date");
       const refreshBtn = el("refresh");
       const dateInfoEl = el("dateInfo");
@@ -623,6 +685,28 @@
       let selectedGroupColor = null;
       const GROUP_KEY = "svb_groups_stewart_tennis";
       let groupColors = JSON.parse(localStorage.getItem(GROUP_KEY) || "{}");
+      
+      function coachStorageKey() {
+        return "svb_coaches_stewart_tennis_" + dateEl.value;
+      }
+
+      function loadCoachStatus() {
+        return JSON.parse(localStorage.getItem(coachStorageKey()) || "{}");
+      }
+
+      function saveCoachStatus(map) {
+        localStorage.setItem(coachStorageKey(), JSON.stringify(map));
+      }
+
+      let coachStatus = {};
+
+      function toggleCoach(name) {
+        coachStatus[name] = !coachStatus[name];
+        saveCoachStatus(coachStatus);
+        renderCoaches();
+        updateCounter();
+      }
+
       function saveGroupColor(pid, color) {
         if (color) {
           groupColors[pid] = color;
@@ -1128,50 +1212,78 @@
       }
 
       /* ====== UI ====== */
-      function updateCounter() {
-        const list = roster.length ? roster : [];
-        let inNow = 0;
-        let presentTotal = 0;
-        list.forEach((p) => {
-          const st = statusMap[p.participant_id]?.status || "none";
-          if (st === "in") {
-            inNow++;
-            presentTotal++;
-          } else if (st === "out") {
-            presentTotal++;
-          }
+      function renderCoaches() {
+        coachRow.innerHTML = "";
+        COACHES.forEach((name) => {
+          const chip = document.createElement("div");
+          chip.className = "coachChip" + (coachStatus[name] ? " present" : "");
+          chip.innerHTML = `
+            <span class="coachDot"></span>
+            <span>${name}</span>
+          `;
+          chip.onclick = () => toggleCoach(name);
+          coachRow.appendChild(chip);
         });
-        const date_iso = dateEl.value;
-        dateInfoEl.textContent = `Date: ${date_iso}  •  ${TZ_LABEL}  •  Total roster: ${list.length}`;
-        counterTopNums.textContent = inNow;
-
-        const presentNames = [];
-        list.forEach((p) => {
-          const st = statusMap[p.participant_id]?.status || "none";
-          if (st === "in") {
-            presentNames.push(p.display_name || p.participant_id);
-          }
-        });
-        const subject = encodeURIComponent(
-          `Stewart Tennis Attendance Report - ${date_iso}`,
-        );
-        const body = encodeURIComponent(
-          `Stewart Tennis Attendance Report\nDate: ${date_iso}\n\nTotal Present: ${inNow} of ${list.length}\n\nStudents Present:\n${presentNames.length ? presentNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`,
-        );
-        const mailtoUrl = `mailto:nwalton@svbtennisfoundation.org?cc=kevin@svbtennisfoundation.org&subject=${subject}&body=${body}`;
-        emailReportLink.onclick = () => {
-          const a = document.createElement("a");
-          a.href = mailtoUrl;
-          a.setAttribute("target", "_self");
-          a.style.display = "none";
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => document.body.removeChild(a), 100);
-        };
       }
+
+function updateCounter() {
+  const list = roster.length ? roster : [];
+  let inNow = 0;
+
+  list.forEach((p) => {
+    const st = statusMap[p.participant_id]?.status || "none";
+    if (st === "in") inNow++;
+  });
+
+  const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
+  const date_iso = dateEl.value;
+
+  dateInfoEl.textContent = `Date: ${date_iso}  •  ${TZ_LABEL}  •  Students on roster: ${list.length}  •  Coaches present: ${coachesPresent.length}/${COACHES.length}`;
+
+  counterTopNums.textContent = inNow;
+
+  const presentNames = [];
+  list.forEach((p) => {
+    const st = statusMap[p.participant_id]?.status || "none";
+    if (st === "in") {
+      presentNames.push(p.display_name || p.participant_id);
+    }
+  });
+
+  const subject = encodeURIComponent(
+    `Stewart Tennis Attendance Report - ${date_iso}`,
+  );
+
+  const body = encodeURIComponent(
+    `Stewart Tennis Attendance Report
+Date: ${date_iso}
+
+Students Present: ${inNow} of ${list.length}
+Coaches Present: ${coachesPresent.length} of ${COACHES.length}
+
+Students Present:
+${presentNames.length ? presentNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
+
+Coaches Present:
+${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`,
+  );
+
+  const mailtoUrl = `mailto:nwalton@svbtennisfoundation.org?cc=kevin@svbtennisfoundation.org,classroom.connector@gmail.com&subject=${subject}&body=${body}`;
+
+  emailReportLink.onclick = () => {
+    const a = document.createElement("a");
+    a.href = mailtoUrl;
+    a.setAttribute("target", "_self");
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => document.body.removeChild(a), 100);
+  };
+}
 
       function render() {
         grid.innerHTML = "";
+        coachStatus = loadCoachStatus();
         const list = roster.length ? sortRoster(roster) : placeholderCards;
 
         updateCounter();
@@ -1326,6 +1438,8 @@
 
           grid.appendChild(card);
         });
+
+        renderCoaches();
       }
 
       async function refreshAll() {
@@ -1358,7 +1472,10 @@
       }
 
       refreshBtn.onclick = refreshAll;
-      dateEl.onchange = refreshAll;
+      dateEl.onchange = () => {
+        coachStatus = loadCoachStatus();
+        refreshAll();
+      };
 
       if (getPin()) {
         pinOverlay.style.display = "none";
