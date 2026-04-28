@@ -866,31 +866,53 @@
       }
 
       /* ====== Photo fallback + cache ====== */
+      function localPhotoFallback(url) {
+        // Live Server serves the repo root. Vercel serves /public as the web root.
+        // This makes local preview work without changing production paths.
+        if (location.hostname === "127.0.0.1" || location.hostname === "localhost") {
+          if (url.startsWith("/photos/")) return "/public" + url;
+        }
+        return "";
+      }
+
       const photoLoadCache = {};
       function applyPhotoOrInitials(photoEl, displayName, photoUrl) {
         photoEl.style.backgroundImage = "";
         photoEl.textContent = initials(displayName);
         if (!photoUrl) return;
 
-        if (photoLoadCache[photoUrl] === true) {
-          photoEl.style.backgroundImage = `url('${photoUrl}')`;
-          photoEl.textContent = "";
-          return;
-        }
-        if (photoLoadCache[photoUrl] === false) {
-          return;
+        const candidates = [photoUrl];
+        const fallback = localPhotoFallback(photoUrl);
+        if (fallback) candidates.push(fallback);
+
+        function tryCandidate(index) {
+          if (index >= candidates.length) return;
+          const url = candidates[index];
+
+          if (photoLoadCache[url] === true) {
+            photoEl.style.backgroundImage = `url('${url}')`;
+            photoEl.textContent = "";
+            return;
+          }
+          if (photoLoadCache[url] === false) {
+            tryCandidate(index + 1);
+            return;
+          }
+
+          const img = new Image();
+          img.onload = () => {
+            photoLoadCache[url] = true;
+            photoEl.style.backgroundImage = `url('${url}')`;
+            photoEl.textContent = "";
+          };
+          img.onerror = () => {
+            photoLoadCache[url] = false;
+            tryCandidate(index + 1);
+          };
+          img.src = url;
         }
 
-        const img = new Image();
-        img.onload = () => {
-          photoLoadCache[photoUrl] = true;
-          photoEl.style.backgroundImage = `url('${photoUrl}')`;
-          photoEl.textContent = "";
-        };
-        img.onerror = () => {
-          photoLoadCache[photoUrl] = false;
-        };
-        img.src = photoUrl;
+        tryCandidate(0);
       }
 
       /* ====== Data ====== */
@@ -1268,16 +1290,10 @@ Coaches Present:
 ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`,
   );
 
-  const mailtoUrl = `mailto:nwalton@svbtennisfoundation.org?cc=kevin@svbtennisfoundation.org,classroom.connector@gmail.com&subject=${subject}&body=${body}`;
+  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=nwalton@svbtennisfoundation.org&cc=kevin@svbtennisfoundation.org,classroom.connector@gmail.com&su=${subject}&body=${body}`;
 
   emailReportLink.onclick = () => {
-    const a = document.createElement("a");
-    a.href = mailtoUrl;
-    a.setAttribute("target", "_self");
-    a.style.display = "none";
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => document.body.removeChild(a), 100);
+    window.open(gmailUrl, "_blank");
   };
 }
 
