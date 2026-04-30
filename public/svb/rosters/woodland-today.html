@@ -1002,15 +1002,9 @@
         const body = encodeURIComponent(
           `Woodland Elementary Attendance Report\nDate: ${date_iso}\n\nTotal Present: ${inNow} of ${list.length}\n\nStudents Present:\n${presentNames.length ? presentNames.map((n, i) => `${i+1}. ${n}`).join('\n') : '(none)'}`
         );
-        const mailtoUrl = `mailto:nwalton@svbtennisfoundation.org?cc=kevin@svbtennisfoundation.org&subject=${subject}&body=${body}`;
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=nwalton@svbtennisfoundation.org&cc=kevin@svbtennisfoundation.org&su=${subject}&body=${body}`;
         emailReportLink.onclick = () => {
-          const a = document.createElement('a');
-          a.href = mailtoUrl;
-          a.setAttribute('target', '_self');
-          a.style.display = 'none';
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => document.body.removeChild(a), 100);
+          window.open(gmailUrl, "_blank");
         };
       }
 

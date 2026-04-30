@@ -740,15 +740,9 @@
         const body = encodeURIComponent(
           `Ambassadors Attendance Report\nDate: ${date_iso}\n\nIn Attendance Now: ${inNow}\nTotal Present (including signed out): ${presentTotal}\nTotal Roster: ${list.length}\n\nStudents Present:\n${presentNames.length ? presentNames.map((n, i) => `${i+1}. ${n}`).join('\n') : '(none)'}`
         );
-        const mailtoUrl = `mailto:nwalton@svbtennisfoundation.org?cc=mytournamentdirector@gmail.com&subject=${subject}&body=${body}`;
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=nwalton@svbtennisfoundation.org&cc=mytournamentdirector@gmail.com&su=${subject}&body=${body}`;
         emailReportLink.onclick = () => {
-          const a = document.createElement('a');
-          a.href = mailtoUrl;
-          a.setAttribute('target', '_self');
-          a.style.display = 'none';
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => document.body.removeChild(a), 100);
+          window.open(gmailUrl, "_blank");
         };
       }
       
