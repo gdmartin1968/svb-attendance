@@ -232,6 +232,56 @@
         font-size: 14px;
         color: #444;
       }
+      .coachSection {
+        margin-top: 24px;
+        margin-bottom: 16px;
+      }
+      .coachSectionTitle {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--muted);
+        margin-bottom: 8px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .coachRow {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+      }
+      .coachChip {
+        flex: 0 0 auto;
+        min-width: 130px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+      }
+      .coachChip.present {
+        background: linear-gradient(135deg, #27ae60, #1e8449);
+        border-color: #2ecc71;
+        box-shadow: 0 0 14px rgba(46, 204, 113, 0.45);
+      }
+      .coachDot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.35);
+      }
+      .coachChip.present .coachDot {
+        background: #fff;
+      }
 
       .overlay {
         position: fixed;
@@ -330,6 +380,11 @@
 
     <main>
       <div class="grid" id="grid"></div>
+
+      <section class="coachSection">
+        <div class="coachSectionTitle">Coaches</div>
+        <div class="coachRow" id="coachRow"></div>
+      </section>
     </main>
 
     <div class="overlay" id="pinOverlay">
@@ -364,6 +419,7 @@
         "https://script.google.com/macros/s/AKfycbznvlI35ckcTD4jyLNhtokbPW58Ug4Xn5NRvbBL8VjvzUCorEg2VWPYjdUuPSFxEddt/exec";
       const ROSTER_ID = "ambassadors";
       const TZ_LABEL = "America/New_York";
+      const COACHES = ["Gordon", "Yusuf"];
 
       /* Optional: hardcode a few photos while you build the roster sheet photo_url column.
    Use participant_id keys from your "rosters" sheet. */
@@ -402,6 +458,7 @@
       /* ====== DOM ====== */
       const el = (id) => document.getElementById(id);
       const grid = el("grid");
+      const coachRow = el("coachRow");
       const dateEl = el("date");
       const refreshBtn = el("refresh");
       const counterEl = el("counter");
@@ -579,6 +636,25 @@
       let roster = [];
       let statusMap = {};
       let localChanges = {}; // Track local changes with timestamps to preserve through refreshes
+      let coachStatus = {};
+
+      function coachStorageKey() {
+        return "svb_coaches_ambassadors_" + dateEl.value;
+      }
+
+      function loadCoachStatus() {
+        return JSON.parse(localStorage.getItem(coachStorageKey()) || "{}");
+      }
+
+      function saveCoachStatus(map) {
+        localStorage.setItem(coachStorageKey(), JSON.stringify(map));
+      }
+
+      function toggleCoach(name) {
+        coachStatus[name] = !coachStatus[name];
+        saveCoachStatus(coachStatus);
+        renderCoaches();
+      }
 
       /* ====== PIN gate ====== */
       async function verifyPin(pin) {
@@ -746,8 +822,23 @@
         };
       }
       
+      function renderCoaches() {
+        coachRow.innerHTML = "";
+        COACHES.forEach((name) => {
+          const chip = document.createElement("div");
+          chip.className = "coachChip" + (coachStatus[name] ? " present" : "");
+          chip.innerHTML = `
+            <span class="coachDot"></span>
+            <span>${name}</span>
+          `;
+          chip.onclick = () => toggleCoach(name);
+          coachRow.appendChild(chip);
+        });
+      }
+
       function render() {
         grid.innerHTML = "";
+        coachStatus = loadCoachStatus();
         const list = roster.length ? roster : placeholderCards;
         
         updateCounter();
@@ -878,6 +969,8 @@
 
           grid.appendChild(card);
         });
+
+        renderCoaches();
       }
 
       async function refreshAll() {
@@ -912,6 +1005,8 @@
         pinOverlay.style.display = "none";
         refreshAll();
       } else {
+        coachStatus = loadCoachStatus();
+        renderCoaches();
         showPinOverlay();
       }
     </script>
