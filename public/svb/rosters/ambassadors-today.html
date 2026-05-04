@@ -793,30 +793,41 @@
       function updateCounter() {
         const list = roster.length ? roster : [];
         let inNow = 0;
-        let presentTotal = 0;
         const presentNames = [];
+
         list.forEach((p) => {
           const st = statusMap[p.participant_id]?.status || "none";
           if (st === "in") {
             inNow++;
-            presentTotal++;
-            presentNames.push(p.display_name || p.participant_id);
-          } else if (st === "out") {
-            presentTotal++;
             presentNames.push(p.display_name || p.participant_id);
           }
         });
+
+        const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
         const date_iso = dateEl.value;
-        counterEl.textContent = `In attendance now: ${inNow}  •  Present total: ${presentTotal}  •  Date: ${date_iso}  •  ${TZ_LABEL}`;
+
+        counterEl.textContent = `In attendance now: ${inNow}  •  Coaches present: ${coachesPresent.length}/${COACHES.length}  •  Date: ${date_iso}  •  ${TZ_LABEL}`;
         counterTopNums.textContent = inNow;
 
         const subject = encodeURIComponent(
           `Ambassadors Attendance Report - ${date_iso}`
         );
         const body = encodeURIComponent(
-          `Ambassadors Attendance Report\nDate: ${date_iso}\n\nIn Attendance Now: ${inNow}\nTotal Present (including signed out): ${presentTotal}\nTotal Roster: ${list.length}\n\nStudents Present:\n${presentNames.length ? presentNames.map((n, i) => `${i+1}. ${n}`).join('\n') : '(none)'}`
+          `Ambassadors Attendance Report
+Date: ${date_iso}
+
+Students Present: ${inNow} of ${list.length}
+Coaches Present: ${coachesPresent.length} of ${COACHES.length}
+
+Students Present:
+${presentNames.length ? presentNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
+
+Coaches Present:
+${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`
         );
+
         const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=nwalton@svbtennisfoundation.org&cc=mytournamentdirector@gmail.com&su=${subject}&body=${body}`;
+
         emailReportLink.onclick = () => {
           window.open(gmailUrl, "_blank");
         };
@@ -871,12 +882,7 @@
           const status = document.createElement("div");
           status.className = "status";
           if (currentMode === "attendance") {
-            status.textContent =
-              st === "none"
-                ? "Not logged in"
-                : st === "in"
-                  ? "Signed in (not signed out)"
-                  : "Signed out";
+            status.textContent = st === "in" ? "HERE" : "Not here yet";
           } else {
             const gc = groupColors[pid];
             status.textContent = gc ? gc.charAt(0).toUpperCase() + gc.slice(1) + " group" : "No group";
@@ -922,45 +928,17 @@
               return;
             }
 
-            let shouldUpdate = false;
-            
-            if (st === "none") {
-              logEvent(pin, {
-                participant_id: pid,
-                action: "signin",
-                status: "in",
-                feeling: "",
-              });
-              shouldUpdate = true;
-            } else if (st === "in") {
-              const takeaway = prompt(
-                "What's your biggest takeaway from this training session?",
-              );
-              if (takeaway === null) return;
-              logEvent(pin, {
-                participant_id: pid,
-                action: "signout",
-                status: "out",
-                takeaway: takeaway.slice(0, 200),
-              });
-              shouldUpdate = true;
-            } else {
-              if (confirm("They are signed out. Sign them in again?")) {
-                logEvent(pin, {
-                  participant_id: pid,
-                  action: "resignin",
-                  status: "in",
-                });
-                shouldUpdate = true;
-              }
-            }
-
-            if (!shouldUpdate) return;
-            
             const newStatus = {
-              status: st === "in" ? "out" : "in",
+              status: st === "in" ? "none" : "in",
               ts: new Date().toISOString(),
             };
+
+            logEvent(pin, {
+              participant_id: pid,
+              action: st === "in" ? "undo" : "signin",
+              status: newStatus.status,
+              feeling: "",
+            });
             statusMap[pid] = newStatus;
             localChanges[pid] = newStatus;
             render();
