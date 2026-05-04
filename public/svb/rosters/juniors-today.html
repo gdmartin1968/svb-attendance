@@ -248,6 +248,56 @@
         font-size: 14px;
         color: #444;
       }
+      .assistantSection {
+        margin-top: 24px;
+        margin-bottom: 16px;
+      }
+      .assistantSectionTitle {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--muted);
+        margin-bottom: 8px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .assistantRow {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+      }
+      .assistantChip {
+        flex: 0 0 auto;
+        min-width: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+      }
+      .assistantChip.present {
+        background: linear-gradient(135deg, #3498db, #21618c);
+        border-color: #5dade2;
+        box-shadow: 0 0 14px rgba(93, 173, 226, 0.45);
+      }
+      .assistantDot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.35);
+      }
+      .assistantChip.present .assistantDot {
+        background: #fff;
+      }
       .coachSection {
         margin-top: 24px;
         margin-bottom: 16px;
@@ -397,6 +447,11 @@
     <main>
       <div class="grid" id="grid"></div>
 
+      <section class="assistantSection">
+        <div class="assistantSectionTitle">Ambassador Assistants</div>
+        <div class="assistantRow" id="assistantRow"></div>
+      </section>
+
       <section class="coachSection">
         <div class="coachSectionTitle">Coaches</div>
         <div class="coachRow" id="coachRow"></div>
@@ -428,6 +483,7 @@
       const SCRIPT_URL =
         "https://script.google.com/macros/s/AKfycbznvlI35ckcTD4jyLNhtokbPW58Ug4Xn5NRvbBL8VjvzUCorEg2VWPYjdUuPSFxEddt/exec";
       const ROSTER_ID = "juniors";
+      const ASSISTANT_ROSTER_ID = "ambassadors";
       const TZ_LABEL = "America/New_York";
       const COACHES = ["Gordon", "Yusuf", "Other"];
 
@@ -451,6 +507,7 @@
       /* ====== DOM ====== */
       const el = (id) => document.getElementById(id);
       const grid = el("grid");
+      const assistantRow = el("assistantRow");
       const coachRow = el("coachRow");
       const dateEl = el("date");
       const refreshBtn = el("refresh");
@@ -475,6 +532,10 @@
       const colorCycle = [null, "green", "orange", "red"];
 
       let roster = [];
+      let assistantRoster = [];
+      let statusMap = {};
+      let localChanges = {};
+      let coachStatus = {};
       let statusMap = {};
       let localChanges = {};
       let coachStatus = {};
@@ -741,6 +802,14 @@
         if (pinOverlay.style.display !== "none" && e.key === "Enter") pinGo.click();
       });
 
+      function assistantStatusKey(participantId) {
+        return "assistant_" + participantId;
+      }
+
+      function getAssistantStatus(participantId) {
+        return statusMap[assistantStatusKey(participantId)]?.status || "none";
+      }
+
       /* ====== Loaders ====== */
       function loadRoster(pin) {
         return new Promise((resolve) => {
@@ -751,6 +820,25 @@
               return;
             }
             roster = (data.participants || []).filter((p) => p && p.participant_id);
+            resolve({ ok: true });
+          });
+        });
+      }
+
+      function loadAssistantRoster(pin) {
+        return new Promise((resolve) => {
+          const url =
+            SCRIPT_URL +
+            "?" +
+            qs({ action: "roster", pin, roster_id: ASSISTANT_ROSTER_ID });
+          jsonp(url, "cb_assistants_" + Date.now(), (data) => {
+            if (!data.ok) {
+              resolve({ ok: false, error: data.error || "assistant_roster_failed" });
+              return;
+            }
+            assistantRoster = (data.participants || []).filter(
+              (p) => p && p.participant_id,
+            );
             resolve({ ok: true });
           });
         });
@@ -820,6 +908,56 @@
       }
 
       /* ====== UI ====== */
+      function renderAssistantAmbassadors() {
+        assistantRow.innerHTML = "";
+
+        assistantRoster.forEach((p) => {
+          const pid = p.participant_id;
+          const display = p.display_name || pid;
+          const statusKey = assistantStatusKey(pid);
+          const st = getAssistantStatus(pid);
+
+          const chip = document.createElement("div");
+          chip.className = "assistantChip" + (st === "in" ? " present" : "");
+          chip.innerHTML = `
+            <span class="assistantDot"></span>
+            <span>${display}</span>
+          `;
+
+          chip.onclick = () => {
+            const pin = getPin();
+            if (!pin) {
+              showPinOverlay();
+              return;
+            }
+
+            if (cancelBanner.style.display === "block") {
+              alert("This date is cancelled.");
+              return;
+            }
+
+            const newStatus = {
+              status: st === "in" ? "none" : "in",
+              ts: new Date().toISOString(),
+            };
+
+            logEvent(pin, {
+              participant_id: statusKey,
+              action: st === "in" ? "undo" : "signin",
+              status: newStatus.status,
+              feeling: "",
+            });
+
+            statusMap[statusKey] = newStatus;
+            localChanges[statusKey] = newStatus;
+            render();
+            setTimeout(refreshAll, 2000);
+          };
+
+          assistantRow.appendChild(chip);
+        });
+      }
+
       function renderCoaches() {
         coachRow.innerHTML = "";
         COACHES.forEach((name) => {
@@ -838,6 +976,7 @@
         const list = roster.length ? roster : [];
         let inNow = 0;
         const presentNames = [];
+        const assistantNames = [];
 
         list.forEach((p) => {
           const st = statusMap[p.participant_id]?.status || "none";
@@ -847,11 +986,18 @@
           }
         });
 
+        assistantRoster.forEach((p) => {
+          const st = getAssistantStatus(p.participant_id);
+          if (st === "in") {
+            assistantNames.push(p.display_name || p.participant_id);
+          }
+        });
+
         coachStatus = loadCoachStatus();
         const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
         const date_iso = dateEl.value;
 
-        counterEl.textContent = `In attendance now: ${inNow}  •  Coaches present: ${coachesPresent.length}/${COACHES.length}  •  Date: ${date_iso}  •  ${TZ_LABEL}`;
+        counterEl.textContent = `In attendance now: ${inNow}  •  Ambassador assistants: ${assistantNames.length}  •  Coaches present: ${coachesPresent.length}/${COACHES.length}  •  Date: ${date_iso}  •  ${TZ_LABEL}`;
         counterTopNums.textContent = inNow;
 
         const subject = encodeURIComponent(`Junior Ambassadors Attendance Report - ${date_iso}`);
@@ -859,11 +1005,15 @@
           `Junior Ambassadors Attendance Report
 Date: ${date_iso}
 
-Students Present: ${inNow} of ${list.length}
+Junior Students Present: ${inNow} of ${list.length}
+Ambassador Assistants Present: ${assistantNames.length}
 Coaches Present: ${coachesPresent.length} of ${COACHES.length}
 
-Students Present:
+Junior Students Present:
 ${presentNames.length ? presentNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
+
+Ambassador Assistants Present:
+${assistantNames.length ? assistantNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
 
 Coaches Present:
 ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`,
@@ -970,6 +1120,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
           grid.appendChild(card);
         });
 
+        renderAssistantAmbassadors();
         renderCoaches();
       }
 
@@ -986,6 +1137,12 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
         if (!r1.ok) {
           counterEl.textContent = "Roster load failed.";
           showPinOverlay();
+          return;
+        }
+
+        const rAssistant = await loadAssistantRoster(pin);
+        if (!rAssistant.ok) {
+          counterEl.textContent = "Ambassador assistant roster load failed.";
           return;
         }
 
@@ -1007,6 +1164,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
 
       loadGroupColorsFromServer();
       coachStatus = loadCoachStatus();
+      renderAssistantAmbassadors();
       renderCoaches();
 
       if (getPin()) {
