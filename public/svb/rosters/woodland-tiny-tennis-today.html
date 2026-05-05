@@ -1272,6 +1272,16 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
         const isMobileDevice =
           /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+        alert(
+          "EMAIL DEBUG\n\n" +
+            "isMobileDevice: " +
+            isMobileDevice +
+            "\n\nUser Agent:\n" +
+            navigator.userAgent +
+            "\n\nMailto URL starts with:\n" +
+            mailtoUrl.substring(0, 300),
+        );
+
         if (isMobileDevice) {
           window.location.href = mailtoUrl;
         } else {
