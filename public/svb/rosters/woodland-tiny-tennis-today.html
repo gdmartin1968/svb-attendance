@@ -1223,12 +1223,12 @@
           }
         });
 
-        const subject = encodeURIComponent(
-          `Woodland Tiny Tennis Attendance Report - ${date_iso}`,
-        );
+        const emailTo = "nwalton@svbtennisfoundation.org";
+        const emailCc = "kevin@svbtennisfoundation.org,classroom.connector@gmail.com";
 
-        const body = encodeURIComponent(
-          `Woodland Tiny Tennis Attendance Report
+        const emailSubject = `Woodland Tiny Tennis Attendance Report - ${date_iso}`;
+
+        const emailBody = `Woodland Tiny Tennis Attendance Report
 Date: ${date_iso}
 
 Students Present: ${inNow} of ${list.length}
@@ -1238,14 +1238,42 @@ Students Present:
 ${presentNames.length ? presentNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
 
 Coaches Present:
-${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`
-        );
-
-        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=nwalton@svbtennisfoundation.org&cc=kevin@svbtennisfoundation.org,classroom.connector@gmail.com&su=${subject}&body=${body}`;
+${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`;
 
         emailReportLink.onclick = () => {
-          window.open(gmailUrl, "_blank");
+          openEmailDraft({
+            to: emailTo,
+            cc: emailCc,
+            subject: emailSubject,
+            body: emailBody,
+          });
         };
+      }
+
+      function openEmailDraft({ to, cc, subject, body }) {
+        const encodedTo = encodeURIComponent(to || "");
+        const encodedCc = encodeURIComponent(cc || "");
+        const encodedSubject = encodeURIComponent(subject || "");
+        const encodedBody = encodeURIComponent(body || "");
+
+        const gmailComposeUrl =
+          `https://mail.google.com/mail/?view=cm&fs=1` +
+          `&to=${encodedTo}` +
+          `&cc=${encodedCc}` +
+          `&su=${encodedSubject}` +
+          `&body=${encodedBody}`;
+
+        const mailtoUrl =
+          `mailto:${encodedTo}` +
+          `?cc=${encodedCc}` +
+          `&subject=${encodedSubject}` +
+          `&body=${encodedBody}`;
+
+        const opened = window.open(gmailComposeUrl, "_blank");
+
+        if (!opened) {
+          window.location.href = mailtoUrl;
+        }
       }
 
       function render() {
