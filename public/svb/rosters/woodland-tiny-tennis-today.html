@@ -1269,20 +1269,19 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
           `&subject=${encodedSubject}` +
           `&body=${encodedBody}`;
 
-        const isMobileDevice =
-          /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        const isAppleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-        alert(
-          "EMAIL DEBUG\n\n" +
-            "isMobileDevice: " +
-            isMobileDevice +
-            "\n\nUser Agent:\n" +
-            navigator.userAgent +
-            "\n\nMailto URL starts with:\n" +
-            mailtoUrl.substring(0, 300),
-        );
+        const gmailIntentUrl =
+          `intent://compose?to=${encodedTo}` +
+          `&cc=${encodedCc}` +
+          `&subject=${encodedSubject}` +
+          `&body=${encodedBody}` +
+          `#Intent;scheme=mailto;package=com.google.android.gm;end`;
 
-        if (isMobileDevice) {
+        if (isAndroid) {
+          window.location.href = gmailIntentUrl;
+        } else if (isAppleMobile) {
           window.location.href = mailtoUrl;
         } else {
           window.open(gmailComposeUrl, "_blank");
