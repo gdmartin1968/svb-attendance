@@ -1269,11 +1269,14 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
           `&subject=${encodedSubject}` +
           `&body=${encodedBody}`;
 
-        window.open(gmailComposeUrl, "_blank");
+        const isMobileDevice =
+          /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-        setTimeout(() => {
+        if (isMobileDevice) {
           window.location.href = mailtoUrl;
-        }, 500);
+        } else {
+          window.open(gmailComposeUrl, "_blank");
+        }
       }
 
       function render() {
