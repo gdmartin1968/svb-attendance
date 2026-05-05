@@ -1335,7 +1335,6 @@
           coachRow.appendChild(chip);
         });
       }
-
       function updateCounter() {
         const list = roster.length ? roster : [];
         let inNow = 0;
@@ -1360,16 +1359,16 @@
         const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
         const date_iso = dateEl.value;
 
-        dateInfoEl.textContent = `Date: ${date_iso}  â€¢  ${TZ_LABEL}  â€¢  Students on roster: ${list.length}  â€¢  Ambassador assistants: ${assistantNames.length}  â€¢  Coaches present: ${coachesPresent.length}/${COACHES.length}`;
+        dateInfoEl.textContent = `Date: ${date_iso}  •  ${TZ_LABEL}  •  Students on roster: ${list.length}  •  Ambassador assistants: ${assistantNames.length}  •  Coaches present: ${coachesPresent.length}/${COACHES.length}`;
 
         counterTopNums.textContent = inNow;
 
-        const subject = encodeURIComponent(
-          `Watergrass Attendance Report - ${date_iso}`,
-        );
+        const emailTo = "nwalton@svbtennisfoundation.org";
+        const emailCc = "kevin@svbtennisfoundation.org,classroom.connector@gmail.com";
 
-        const body = encodeURIComponent(
-          `Watergrass Attendance Report
+        const emailSubject = `Watergrass Attendance Report - ${date_iso}`;
+
+        const emailBody = `Watergrass Attendance Report
 Date: ${date_iso}
 
 Students Present: ${inNow} of ${list.length}
@@ -1383,62 +1382,55 @@ Ambassador Assistants Present:
 ${assistantNames.length ? assistantNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
 
 Coaches Present:
-${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`,
-        );
-
-        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=nwalton@svbtennisfoundation.org&cc=kevin@svbtennisfoundation.org,classroom.connector@gmail.com&su=${subject}&body=${body}`;
+${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`;
 
         emailReportLink.onclick = () => {
-          window.open(gmailUrl, "_blank");
-        };
-      }
-        const list = roster.length ? roster : [];
-        let inNow = 0;
-        list.forEach((p) => {
-          const st = statusMap[p.participant_id]?.status || "none";
-          if (st === "in") inNow++;
-        });
-
-        const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
-        const date_iso = dateEl.value;
-
-        dateInfoEl.textContent = `Date: ${date_iso}  â€¢  ${TZ_LABEL}  â€¢  Students on roster: ${list.length}  â€¢  Coaches present: ${coachesPresent.length}/${COACHES.length}`;
-
-        counterTopNums.textContent = inNow;
-
-        const presentNames = [];
-        list.forEach((p) => {
-          const st = statusMap[p.participant_id]?.status || "none";
-          if (st === "in") {
-            presentNames.push(p.display_name || p.participant_id);
-          }
-        });
-
-        const subject = encodeURIComponent(
-          `Watergrass Attendance Report - ${date_iso}`,
-        );
-
-        const body = encodeURIComponent(
-          `Watergrass Attendance Report
-Date: ${date_iso}
-
-Students Present: ${inNow} of ${list.length}
-Coaches Present: ${coachesPresent.length} of ${COACHES.length}
-
-Students Present:
-${presentNames.length ? presentNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
-
-Coaches Present:
-${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`,
-        );
-
-        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=nwalton@svbtennisfoundation.org&cc=kevin@svbtennisfoundation.org,classroom.connector@gmail.com&su=${subject}&body=${body}`;
-
-        emailReportLink.onclick = () => {
-          window.open(gmailUrl, "_blank");
+          openEmailDraft({
+            to: emailTo,
+            cc: emailCc,
+            subject: emailSubject,
+            body: emailBody,
+          });
         };
       }
 
+      function openEmailDraft({ to, cc, subject, body }) {
+        const encodedTo = encodeURIComponent(to || "");
+        const encodedCc = encodeURIComponent(cc || "");
+        const encodedSubject = encodeURIComponent(subject || "");
+        const encodedBody = encodeURIComponent(body || "");
+
+        const gmailComposeUrl =
+          `https://mail.google.com/mail/?view=cm&fs=1` +
+          `&to=${encodedTo}` +
+          `&cc=${encodedCc}` +
+          `&su=${encodedSubject}` +
+          `&body=${encodedBody}`;
+
+        const mailtoUrl =
+          `mailto:${encodedTo}` +
+          `?cc=${encodedCc}` +
+          `&subject=${encodedSubject}` +
+          `&body=${encodedBody}`;
+
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        const isAppleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        const gmailIntentUrl =
+          `intent://compose?to=${encodedTo}` +
+          `&cc=${encodedCc}` +
+          `&subject=${encodedSubject}` +
+          `&body=${encodedBody}` +
+          `#Intent;scheme=mailto;package=com.google.android.gm;end`;
+
+        if (isAndroid) {
+          window.location.href = gmailIntentUrl;
+        } else if (isAppleMobile) {
+          window.location.href = mailtoUrl;
+        } else {
+          window.open(gmailComposeUrl, "_blank");
+        }
+      }
       function render() {
         grid.innerHTML = "";
         coachStatus = loadCoachStatus();
@@ -1662,5 +1654,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
     </script>
   </body>
 </html>
+
+
 
 
