@@ -1017,11 +1017,57 @@
         const body = encodeURIComponent(
           `Wesley Chapel Elementary Attendance Report\nDate: ${date_iso}\n\nTotal Present: ${inNow} of ${list.length}\n\nStudents Present:\n${presentNames.length ? presentNames.map((n, i) => `${i+1}. ${n}`).join('\n') : '(none)'}`
         );
-        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=nwalton@svbtennisfoundation.org&cc=kevin@svbtennisfoundation.org&su=${subject}&body=${body}`;
         emailReportLink.onclick = () => {
-          window.open(gmailUrl, "_blank");
+          openEmailDraftFromEncoded(subject, body);
         };
       }
+      function openEmailDraftFromEncoded(encodedSubject, encodedBody) {
+        openEmailDraft({
+          to: "nwalton@svbtennisfoundation.org",
+          cc: "kevin@svbtennisfoundation.org,classroom.connector@gmail.com",
+          subject: decodeURIComponent(encodedSubject || ""),
+          body: decodeURIComponent(encodedBody || ""),
+        });
+      }
+
+      function openEmailDraft({ to, cc, subject, body }) {
+        const encodedTo = encodeURIComponent(to || "");
+        const encodedCc = encodeURIComponent(cc || "");
+        const encodedSubject = encodeURIComponent(subject || "");
+        const encodedBody = encodeURIComponent(body || "");
+
+        const gmailComposeUrl =
+          `https://mail.google.com/mail/?view=cm&fs=1` +
+          `&to=${encodedTo}` +
+          `&cc=${encodedCc}` +
+          `&su=${encodedSubject}` +
+          `&body=${encodedBody}`;
+
+        const mailtoUrl =
+          `mailto:${encodedTo}` +
+          `?cc=${encodedCc}` +
+          `&subject=${encodedSubject}` +
+          `&body=${encodedBody}`;
+
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        const isAppleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        const gmailIntentUrl =
+          `intent://compose?to=${encodedTo}` +
+          `&cc=${encodedCc}` +
+          `&subject=${encodedSubject}` +
+          `&body=${encodedBody}` +
+          `#Intent;scheme=mailto;package=com.google.android.gm;end`;
+
+        if (isAndroid) {
+          window.location.href = gmailIntentUrl;
+        } else if (isAppleMobile) {
+          window.location.href = mailtoUrl;
+        } else {
+          window.open(gmailComposeUrl, "_blank");
+        }
+      }
+
 
       function render() {
         grid.innerHTML = "";
@@ -1210,3 +1256,4 @@
     </script>
   </body>
 </html>
+
