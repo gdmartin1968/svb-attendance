@@ -413,6 +413,7 @@
       </div>
     </div>
 
+    <script src="/svb/shared-report-actions.js"></script>
     <script>
       /* ====== CONFIG ====== */
       const SCRIPT_URL =
@@ -826,7 +827,7 @@ Coaches Present:
 ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`
         );
         emailReportLink.onclick = () => {
-          openEmailDraftFromEncoded(subject, body);
+          window.SVBReportActions.openEmailDraftFromEncoded(subject, body);
         };
       }
       
@@ -844,7 +845,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
         });
       }
       function openEmailDraftFromEncoded(encodedSubject, encodedBody) {
-        openEmailDraft({
+        window.SVBReportActions.openEmailDraft({
           to: "nwalton@svbtennisfoundation.org",
           cc: "kevin@svbtennisfoundation.org,classroom.connector@gmail.com",
           subject: decodeURIComponent(encodedSubject || ""),
@@ -852,43 +853,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
         });
       }
 
-      function openEmailDraft({ to, cc, subject, body }) {
-        const encodedTo = encodeURIComponent(to || "");
-        const encodedCc = encodeURIComponent(cc || "");
-        const encodedSubject = encodeURIComponent(subject || "");
-        const encodedBody = encodeURIComponent(body || "");
-
-        const gmailComposeUrl =
-          `https://mail.google.com/mail/?view=cm&fs=1` +
-          `&to=${encodedTo}` +
-          `&cc=${encodedCc}` +
-          `&su=${encodedSubject}` +
-          `&body=${encodedBody}`;
-
-        const mailtoUrl =
-          `mailto:${encodedTo}` +
-          `?cc=${encodedCc}` +
-          `&subject=${encodedSubject}` +
-          `&body=${encodedBody}`;
-
-        const isAndroid = /Android/i.test(navigator.userAgent);
-        const isAppleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-        const gmailIntentUrl =
-          `intent://compose?to=${encodedTo}` +
-          `&cc=${encodedCc}` +
-          `&subject=${encodedSubject}` +
-          `&body=${encodedBody}` +
-          `#Intent;scheme=mailto;package=com.google.android.gm;end`;
-
-        if (isAndroid) {
-          window.location.href = gmailIntentUrl;
-        } else if (isAppleMobile) {
-          window.location.href = mailtoUrl;
-        } else {
-          window.open(gmailComposeUrl, "_blank");
-        }
-      }
+      
 
 
       function render() {
@@ -1034,4 +999,10 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
     </script>
   </body>
 </html>
+
+
+
+
+
+
 
