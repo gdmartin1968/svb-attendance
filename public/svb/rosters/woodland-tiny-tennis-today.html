@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -9,7 +9,7 @@
     />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>Woodland Tiny Tennis — Today</title>
+    <title>Woodland Tiny Tennis - Today</title>
     <style>
       :root {
         --bg: #07111b;
@@ -233,7 +233,13 @@
       .pill {
         margin-top: 6px;
         color: #cfe;
-        font-size: 14px;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
       }
       .row {
         display: flex;
@@ -519,9 +525,9 @@
       <div class="topbar">
         <div>
           <h1>
-            Woodland Tiny Tennis — Today
+            Woodland Tiny Tennis - Today
           </h1>
-          <div class="pill" id="dateInfo">Loading…</div>
+          <div class="pill" id="dateInfo">Loadingâ€¦</div>
         </div>
         <div class="row">
           <input id="date" type="date" />
@@ -529,6 +535,8 @@
           <a class="smallLink" href="/svb/rosters/index.html">Menu</a>
         </div>
       </div>
+
+      <div id="svbProgramInfoMount"></div>
 
       <div class="counterBig" id="counterTop">
         <span class="nums" id="counterTopNums">--</span> in attendance now
@@ -621,6 +629,22 @@
       </div>
     </div>
 
+    <script>
+      window.SVB_PROGRAM_INFO = {
+        programName: "Woodland Tiny Tennis",
+        rosterId: "woodland_tiny_tennis",
+        session: 9,
+        totalSessions: 16,
+        ageGroup: "elementary",
+        assistantLabel: "Teacher Assistant",
+        assistantNames: ["Ms. Barker", "Other"],
+        meetingDays: ["Tuesday", "Thursday"],
+        closedDates: ["2026-05-25"],
+      };
+    </script>
+
+    <script src="/svb/program-info.js"></script>
+
     <script src="/svb/shared-report-actions.js"></script>
     <script>
       const SCRIPT_URL =
@@ -647,7 +671,7 @@
         },
         {
           participant_id: "placeholder_3",
-          display_name: "in Google Sheet → rosters",
+          display_name: "in Google Sheet â†’ rosters",
           photo_url: "",
           grade: "",
         },
@@ -1201,57 +1225,58 @@
       }
 
       function updateCounter() {
-        const list = roster.length ? roster : [];
-        let inNow = 0;
-        list.forEach((p) => {
-          const st = statusMap[p.participant_id]?.status || "none";
-          if (st === "in") inNow++;
-        });
+  const list = roster.length ? roster : [];
+  let inNow = 0;
+  const presentNames = [];
 
-        const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
-        const date_iso = dateEl.value;
+  list.forEach((p) => {
+    const st = statusMap[p.participant_id]?.status || "none";
+    if (st === "in") {
+      inNow++;
+      presentNames.push(p.display_name || p.participant_id);
+    }
+  });
 
-        dateInfoEl.textContent =
-          `Date: ${date_iso}  •  ${TZ_LABEL}  •  Students on roster: ${list.length}  •  Coaches present: ${coachesPresent.length}/${COACHES.length}`;
+  const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
+  const teacherAssistantsPresent = window.SVB_PROGRAM_ASSISTANTS_PRESENT || [];
+  const lessonNumber = window.SVB_PROGRAM_INFO?.session || "";
+  const date_iso = dateEl.value;
 
-        counterTopNums.textContent = inNow;
+  dateInfoEl.textContent = `Students on roster: ${list.length} • Teacher Assistants: ${teacherAssistantsPresent.length} • Coaches present: ${coachesPresent.length}/${COACHES.length}`;
 
-        const presentNames = [];
-        list.forEach((p) => {
-          const st = statusMap[p.participant_id]?.status || "none";
-          if (st === "in") {
-            presentNames.push(p.display_name || p.participant_id);
-          }
-        });
+  counterTopNums.textContent = inNow;
 
-        const emailTo = "nwalton@svbtennisfoundation.org";
-        const emailCc = "kevin@svbtennisfoundation.org,classroom.connector@gmail.com";
+  const emailTo = "nwalton@svbtennisfoundation.org";
+  const emailCc = "kevin@svbtennisfoundation.org,classroom.connector@gmail.com";
 
-        const emailSubject = `Woodland Tiny Tennis Attendance Report - ${date_iso}`;
+  const emailSubject = `Woodland Tiny Tennis Attendance Report - Lesson ${lessonNumber} - ${date_iso}`;
 
-        const emailBody = `Woodland Tiny Tennis Attendance Report
+  const emailBody = `Woodland Tiny Tennis Attendance Report
 Date: ${date_iso}
+Lesson Number: ${lessonNumber}
 
 Students Present: ${inNow} of ${list.length}
+Teacher Assistants Present: ${teacherAssistantsPresent.length}
 Coaches Present: ${coachesPresent.length} of ${COACHES.length}
 
 Students Present:
 ${presentNames.length ? presentNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
 
+Teacher Assistants Present:
+${teacherAssistantsPresent.length ? teacherAssistantsPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
+
 Coaches Present:
 ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`;
 
-        emailReportLink.onclick = () => {
-          window.SVBReportActions.openEmailDraft({
-            to: emailTo,
-            cc: emailCc,
-            subject: emailSubject,
-            body: emailBody,
-          });
-        };
-      }
-
-      
+  emailReportLink.onclick = () => {
+    window.SVBReportActions.openEmailDraft({
+      to: emailTo,
+      cc: emailCc,
+      subject: emailSubject,
+      body: emailBody,
+    });
+  };
+}
 
       function render() {
         grid.innerHTML = "";
@@ -1284,7 +1309,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
 
           const gradeEl = document.createElement("div");
           gradeEl.className = "gradeOverlay";
-          gradeEl.textContent = grade ? "Gr " + grade : "Gr —";
+          gradeEl.textContent = grade ? "Gr " + grade : "Gr -";
           photo.appendChild(gradeEl);
 
           const currentLvl = getLevel(pid);
@@ -1425,7 +1450,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
             showPinOverlay();
             return;
           }
-          dateInfoEl.textContent = "Loading…";
+          dateInfoEl.textContent = "Loadingâ€¦";
           coachStatus = loadCoachStatus();
 
           const r1 = await loadRoster(pin);
@@ -1449,6 +1474,8 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
         }
       }
 
+      window.SVB_PROGRAM_INFO_UPDATED = updateCounter;
+
       refreshBtn.onclick = refreshAll;
       dateEl.onchange = () => {
         coachStatus = loadCoachStatus();
@@ -1466,6 +1493,20 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
     </script>
   </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

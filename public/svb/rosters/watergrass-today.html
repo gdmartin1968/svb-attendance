@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -9,7 +9,7 @@
     />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>Watergrass — Today</title>
+    <title>Watergrass - Today</title>
     <style>
       :root {
         --bg: #07111b;
@@ -233,7 +233,13 @@
       .pill {
         margin-top: 6px;
         color: #cfe;
-        font-size: 14px;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
       }
       .row {
         display: flex;
@@ -569,9 +575,9 @@
       <div class="topbar">
         <div>
           <h1>
-            Watergrass — Today
+            Watergrass - Today
           </h1>
-          <div class="pill" id="dateInfo">Loading…</div>
+          <div class="pill" id="dateInfo">Loadingâ€¦</div>
         </div>
         <div class="row">
           <input id="date" type="date" />
@@ -579,6 +585,8 @@
           <a class="smallLink" href="/svb/rosters/index.html">Menu</a>
         </div>
       </div>
+
+      <div id="svbProgramInfoMount"></div>
 
       <div class="counterBig" id="counterTop">
         <span class="nums" id="counterTopNums">--</span> in attendance now
@@ -676,6 +684,22 @@
       </div>
     </div>
 
+    <script>
+      window.SVB_PROGRAM_INFO = {
+        programName: "Watergrass Tennis",
+        rosterId: "watergrass",
+        session: 9,
+        totalSessions: 16,
+        ageGroup: "elementary",
+        assistantLabel: "Teacher Assistant",
+        assistantNames: ["Coach O", "Other"],
+        meetingDays: ["Monday", "Wednesday"],
+        closedDates: ["2026-05-25"],
+      };
+    </script>
+
+    <script src="/svb/program-info.js"></script>
+
     <script src="/svb/shared-report-actions.js"></script>
     <script>
       const SCRIPT_URL =
@@ -703,7 +727,7 @@
         },
         {
           participant_id: "placeholder_3",
-          display_name: "in Google Sheet → rosters",
+          display_name: "in Google Sheet â†’ rosters",
           photo_url: "",
           grade: "",
         },
@@ -1337,65 +1361,71 @@
         });
       }
       function updateCounter() {
-        const list = roster.length ? roster : [];
-        let inNow = 0;
-        const presentNames = [];
-        const assistantNames = [];
+  const list = roster.length ? roster : [];
+  let inNow = 0;
+  const presentNames = [];
+  const ambassadorAssistantNames = [];
 
-        list.forEach((p) => {
-          const st = statusMap[p.participant_id]?.status || "none";
-          if (st === "in") {
-            inNow++;
-            presentNames.push(p.display_name || p.participant_id);
-          }
-        });
+  list.forEach((p) => {
+    const st = statusMap[p.participant_id]?.status || "none";
+    if (st === "in") {
+      inNow++;
+      presentNames.push(p.display_name || p.participant_id);
+    }
+  });
 
-        assistantRoster.forEach((p) => {
-          const st = getAssistantStatus(p.participant_id);
-          if (st === "in") {
-            assistantNames.push(p.display_name || p.participant_id);
-          }
-        });
+  assistantRoster.forEach((p) => {
+    const st = getAssistantStatus(p.participant_id);
+    if (st === "in") {
+      ambassadorAssistantNames.push(p.display_name || p.participant_id);
+    }
+  });
 
-        const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
-        const date_iso = dateEl.value;
+  const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
+  const teacherAssistantsPresent = window.SVB_PROGRAM_ASSISTANTS_PRESENT || [];
+  const lessonNumber = window.SVB_PROGRAM_INFO?.session || "";
+  const date_iso = dateEl.value;
 
-        dateInfoEl.textContent = `Date: ${date_iso}  �  ${TZ_LABEL}  �  Students on roster: ${list.length}  �  Ambassador assistants: ${assistantNames.length}  �  Coaches present: ${coachesPresent.length}/${COACHES.length}`;
+  dateInfoEl.textContent = `Students on roster: ${list.length} • Teacher Assistants: ${teacherAssistantsPresent.length} • Coaches present: ${coachesPresent.length}/${COACHES.length}`;
 
-        counterTopNums.textContent = inNow;
+  counterTopNums.textContent = inNow;
 
-        const emailTo = "nwalton@svbtennisfoundation.org";
-        const emailCc = "kevin@svbtennisfoundation.org,classroom.connector@gmail.com";
+  const emailTo = "nwalton@svbtennisfoundation.org";
+  const emailCc = "kevin@svbtennisfoundation.org,classroom.connector@gmail.com";
 
-        const emailSubject = `Watergrass Attendance Report - ${date_iso}`;
+  const emailSubject = `Watergrass Attendance Report - Lesson ${lessonNumber} - ${date_iso}`;
 
-        const emailBody = `Watergrass Attendance Report
+  const emailBody = `Watergrass Attendance Report
 Date: ${date_iso}
+Lesson Number: ${lessonNumber}
 
 Students Present: ${inNow} of ${list.length}
-Ambassador Assistants Present: ${assistantNames.length}
+Teacher Assistants Present: ${teacherAssistantsPresent.length}
+Ambassador Assistants Present: ${ambassadorAssistantNames.length}
 Coaches Present: ${coachesPresent.length} of ${COACHES.length}
 
 Students Present:
 ${presentNames.length ? presentNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
 
+Teacher Assistants Present:
+${teacherAssistantsPresent.length ? teacherAssistantsPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
+
 Ambassador Assistants Present:
-${assistantNames.length ? assistantNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
+${ambassadorAssistantNames.length ? ambassadorAssistantNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
 
 Coaches Present:
 ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`;
 
-        emailReportLink.onclick = () => {
-          window.SVBReportActions.openEmailDraft({
-            to: emailTo,
-            cc: emailCc,
-            subject: emailSubject,
-            body: emailBody,
-          });
-        };
-      }
+  emailReportLink.onclick = () => {
+    window.SVBReportActions.openEmailDraft({
+      to: emailTo,
+      cc: emailCc,
+      subject: emailSubject,
+      body: emailBody,
+    });
+  };
+}
 
-      
       function render() {
         grid.innerHTML = "";
         coachStatus = loadCoachStatus();
@@ -1427,7 +1457,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
 
           const gradeEl = document.createElement("div");
           gradeEl.className = "gradeOverlay";
-          gradeEl.textContent = grade ? "Gr " + grade : "Gr —";
+          gradeEl.textContent = grade ? "Gr " + grade : "Gr -";
           photo.appendChild(gradeEl);
 
           const currentLvl = getLevel(pid);
@@ -1569,7 +1599,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
             showPinOverlay();
             return;
           }
-          dateInfoEl.textContent = "Loading…";
+          dateInfoEl.textContent = "Loadingâ€¦";
           coachStatus = loadCoachStatus();
 
           const r1 = await loadRoster(pin);
@@ -1601,6 +1631,8 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
         }
       }
 
+      window.SVB_PROGRAM_INFO_UPDATED = updateCounter;
+
       refreshBtn.onclick = refreshAll;
       dateEl.onchange = () => {
         coachStatus = loadCoachStatus();
@@ -1619,6 +1651,13 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
     </script>
   </body>
 </html>
+
+
+
+
+
+
+
 
 
 
