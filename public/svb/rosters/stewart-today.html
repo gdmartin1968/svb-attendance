@@ -533,6 +533,8 @@
           <a class="smallLink" href="/svb/rosters/index.html">Menu</a>
         </div>
       </div>
+      <div id="svbProgramInfoMount"></div>
+
       <div class="counterBig" id="counterTop">
         <span class="nums" id="counterTopNums">--</span> in attendance now
       </div>
@@ -620,6 +622,20 @@
       </div>
     </div>
 
+    <script>
+      window.SVB_PROGRAM_INFO = {
+        programName: "Stewart Tennis",
+        rosterId: "stewart_tennis",
+        session: 9,
+        totalSessions: 16,
+        ageGroup: "elementary",
+        assistantLabel: "Teacher Assistant",
+        assistantNames: ["Mrs. Schmidt", "Other"],
+        meetingDays: ["Monday", "Wednesday"],
+        closedDates: ["2026-05-25"],
+      };
+    </script>
+    <script src="/svb/program-info.js"></script>
     <script src="/svb/shared-report-actions.js"></script>
     <script>
       /* ====== CONFIG ====== */
@@ -1259,6 +1275,8 @@ function updateCounter() {
   });
 
   const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
+  const teacherAssistantsPresent = window.SVB_PROGRAM_ASSISTANTS_PRESENT || [];
+  const lessonNumber = window.SVB_PROGRAM_INFO?.session || "";
   const date_iso = dateEl.value;
 
   dateInfoEl.textContent = `Date: ${date_iso}  •  ${TZ_LABEL}  •  Students on roster: ${list.length}  •  Coaches present: ${coachesPresent.length}/${COACHES.length}`;
@@ -1280,12 +1298,17 @@ function updateCounter() {
 
   const emailBody = `Stewart Elementary Attendance Report
 Date: ${date_iso}
+Lesson Number: ${lessonNumber}
 
 Students Present: ${inNow} of ${list.length}
+Teacher Assistants Present: ${teacherAssistantsPresent.length}
 Coaches Present: ${coachesPresent.length} of ${COACHES.length}
 
 Students Present:
 ${presentNames.length ? presentNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
+
+Teacher Assistants Present:
+${teacherAssistantsPresent.length ? teacherAssistantsPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
 
 Coaches Present:
 ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`;
@@ -1492,6 +1515,8 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
         }
       }
 
+      window.SVB_PROGRAM_INFO_UPDATED = updateCounter;
+
       refreshBtn.onclick = refreshAll;
       dateEl.onchange = () => {
         coachStatus = loadCoachStatus();
@@ -1507,6 +1532,8 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
     </script>
   </body>
 </html>
+
+
 
 
 
