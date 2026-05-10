@@ -1,9 +1,9 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Ambassadors — Today</title>
+    <title>Ambassadors â€” Today</title>
     <style>
       :root {
         --bg: #07111b;
@@ -127,7 +127,13 @@
       .pill {
         margin-top: 6px;
         color: #cfe;
-        font-size: 14px;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
       }
       .row {
         display: flex;
@@ -341,33 +347,46 @@
         color: var(--muted);
         font-size: 12px;
       }
+    
+      /* Hide session + teacher assistant panel for year-round ambassador programs */
+      .programInfoSession,
+      .programInfoMeta {
+        display: none !important;
+      }
+
     </style>
   </head>
   <body>
     <header>
       <div class="topbar">
         <div>
-          <h1>Ambassadors — Today</h1>
-          <div class="pill" id="counter">Loading…</div>
+          <h1>Ambassadors - Today</h1>
+          <div class="pill" id="counter">Loading...</div>
         </div>
-        <div class="counterBig" id="counterTop">
-          <span class="nums" id="counterTopNums">--</span> in attendance now
-        </div>
+
         <div class="row">
           <input id="date" type="date" />
           <button class="primary" id="refresh">Refresh</button>
-          <a class="smallLink" href="/svb/rosters/ambassadors-history.html"
-            >History view</a
-          >
+          <a class="smallLink" href="/svb/rosters/ambassadors-history.html">History view</a>
           <a class="smallLink" href="/svb/rosters/index.html">Menu</a>
         </div>
       </div>
+
+      <div id="svbProgramInfoMount"></div>
+
+      <div class="counterBig" id="counterTop">
+        <span class="nums" id="counterTopNums">--</span> in attendance now
+      </div>
+
       <div class="modeBar">
         <button class="modeBtn active" id="modeAttendance">Attendance</button>
         <button class="modeBtn" id="modeGroups">Groups</button>
-        <span style="margin-left: 16px;">|</span>
-        <button id="emailReport" style="background: none; border: none; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; padding: 0;">Email Report</button>
+        <span style="margin-left: 16px">|</span>
+        <button id="emailReport" style="background: none; border: none; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; padding: 0;">
+          Email Report
+        </button>
       </div>
+
       <div class="colorBar" id="colorBar">
         <span class="colorChoice green" data-color="green">GREEN</span>
         <span class="colorChoice orange" data-color="orange">ORANGE</span>
@@ -375,6 +394,7 @@
         <span class="colorChoice none" data-color="none">NONE</span>
         <button class="clearAllBtn" id="clearAllLevels">Clear All Levels</button>
       </div>
+
       <div class="warn" id="cancelBanner"></div>
     </header>
 
@@ -413,6 +433,20 @@
       </div>
     </div>
 
+    
+    <script>
+      window.SVB_PROGRAM_INFO = {
+        hideSession: true,
+        hideAssistants: true,
+        programName: "Ambassadors",
+        rosterId: "ambassadors",
+        ageGroup: "high",
+        question: "What is a weakness you are actively developing into a strength?"
+      };
+    </script>
+
+    <script src="/svb/program-info.js"></script>
+
     <script src="/svb/shared-report-actions.js"></script>
     <script>
       /* ====== CONFIG ====== */
@@ -420,7 +454,7 @@
         "https://script.google.com/macros/s/AKfycbznvlI35ckcTD4jyLNhtokbPW58Ug4Xn5NRvbBL8VjvzUCorEg2VWPYjdUuPSFxEddt/exec";
       const ROSTER_ID = "ambassadors";
       const TZ_LABEL = "America/New_York";
-      const COACHES = ["Gordon", "Yusuf"];
+      const COACHES = ["Gordon", "Yusuf", "Other"];
 
       /* Optional: hardcode a few photos while you build the roster sheet photo_url column.
    Use participant_id keys from your "rosters" sheet. */
@@ -807,7 +841,7 @@
         const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
         const date_iso = dateEl.value;
 
-        counterEl.textContent = `In attendance now: ${inNow}  •  Coaches present: ${coachesPresent.length}/${COACHES.length}  •  Date: ${date_iso}  •  ${TZ_LABEL}`;
+        counterEl.textContent = `In attendance now: ${inNow} | Coaches present: ${coachesPresent.length}/${COACHES.length}`;
         counterTopNums.textContent = inNow;
 
         const subject = encodeURIComponent(
@@ -967,7 +1001,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
           return;
         }
 
-        counterEl.textContent = "Loading…";
+        counterEl.textContent = "Loadingâ€¦";
         const r1 = await loadRoster(pin);
         if (!r1.ok) {
           counterEl.textContent =
@@ -999,6 +1033,14 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
     </script>
   </body>
 </html>
+
+
+
+
+
+
+
+
 
 
 

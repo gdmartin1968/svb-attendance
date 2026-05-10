@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -10,7 +10,7 @@
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307111b'/%3E%3Ccircle cx='21' cy='22' r='7' fill='%232ecc71'/%3E%3Ccircle cx='43' cy='22' r='7' fill='%233498db'/%3E%3Cpath d='M12 47c2-10 16-10 18 0' fill='none' stroke='%23ffffff' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M34 47c2-10 16-10 18 0' fill='none' stroke='%23ffffff' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M18 34h28' stroke='%23f39c12' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E"
     />
-    <title>Junior Ambassadors — Today</title>
+    <title>Junior Ambassadors - Today</title>
     <style>
       :root {
         --bg: #07111b;
@@ -89,7 +89,13 @@
       .pill {
         margin-top: 6px;
         color: #cfe;
-        font-size: 14px;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
       }
       .row {
         display: flex;
@@ -401,6 +407,13 @@
         color: var(--muted);
         font-size: 12px;
       }
+    
+      /* Hide session + teacher assistant panel for year-round ambassador programs */
+      .programInfoSession,
+      .programInfoMeta {
+        display: none !important;
+      }
+
     </style>
   </head>
   <body>
@@ -411,18 +424,22 @@
     <header>
       <div class="topbar">
         <div>
-          <h1>Junior Ambassadors — Today</h1>
-          <div class="pill" id="counter">Loading…</div>
+          <h1>Junior Ambassadors - Today</h1>
+          <div class="pill" id="counter">Loading...</div>
         </div>
-        <div class="counterBig" id="counterTop">
-          <span class="nums" id="counterTopNums">--</span> in attendance now
-        </div>
+
         <div class="row">
           <input id="date" type="date" />
           <button class="primary" id="refresh">Refresh</button>
           <a class="smallLink" href="/svb/rosters/juniors-history.html">History view</a>
           <a class="smallLink" href="/svb/rosters/index.html">Menu</a>
         </div>
+      </div>
+
+      <div id="svbProgramInfoMount"></div>
+
+      <div class="counterBig" id="counterTop">
+        <span class="nums" id="counterTopNums">--</span> in attendance now
       </div>
 
       <div class="modeBar">
@@ -441,6 +458,7 @@
         <span class="colorChoice none" data-color="none">NONE</span>
         <button class="clearAllBtn" id="clearAllLevels">Clear All Levels</button>
       </div>
+
       <div class="warn" id="cancelBanner"></div>
     </header>
 
@@ -461,7 +479,7 @@
     <div class="overlay" id="pinOverlay">
       <div class="modal">
         <h2>Enter coach PIN</h2>
-        <p>PIN is required to load and record today’s attendance.</p>
+        <p>PIN is required to load and record today's attendance.</p>
         <div class="row2">
           <input
             id="pinInput"
@@ -477,6 +495,19 @@
         <div class="hint">PIN is stored only in this browser session.</div>
       </div>
     </div>
+
+    <script>
+      window.SVB_PROGRAM_INFO = {
+        hideAssistants: true,
+        programName: "Junior Ambassadors",
+        rosterId: "juniors",
+        hideSession: true,
+        ageGroup: "middle",
+        question: "What is one challenge you are working through, and what is your plan to improve?",
+      };
+    </script>
+
+    <script src="/svb/program-info.js"></script>
 
     <script src="/svb/shared-report-actions.js"></script>
     <script>
@@ -971,66 +1002,49 @@
       }
 
       function updateCounter() {
-        const list = roster.length ? roster : [];
-        let inNow = 0;
-        const presentNames = [];
-        const assistantNames = [];
+  const list = roster.length ? roster : [];
+  let inNow = 0;
+  const presentNames = [];
 
-        list.forEach((p) => {
-          const st = statusMap[p.participant_id]?.status || "none";
-          if (st === "in") {
-            inNow++;
-            presentNames.push(p.display_name || p.participant_id);
-          }
-        });
+  list.forEach((p) => {
+    const st = statusMap[p.participant_id]?.status || "none";
+    if (st === "in") {
+      inNow++;
+      presentNames.push(p.display_name || p.participant_id);
+    }
+  });
 
-        assistantRoster.forEach((p) => {
-          const st = getAssistantStatus(p.participant_id);
-          if (st === "in") {
-            assistantNames.push(p.display_name || p.participant_id);
-          }
-        });
+  const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
+  const teacherAssistantsPresent = window.SVB_PROGRAM_ASSISTANTS_PRESENT || [];
+  const date_iso = dateEl.value;
 
-        coachStatus = loadCoachStatus();
-        const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
-        const date_iso = dateEl.value;
+  counterEl.textContent = `Students on roster: ${list.length} | Coaches present: ${coachesPresent.length}/${COACHES.length}`;
 
-        counterEl.textContent = `In attendance now: ${inNow}  •  Ambassador assistants: ${assistantNames.length}  •  Coaches present: ${coachesPresent.length}/${COACHES.length}  •  Date: ${date_iso}  •  ${TZ_LABEL}`;
-        counterTopNums.textContent = inNow;
+  counterTopNums.textContent = inNow;
 
-        const subject = encodeURIComponent(`Junior Ambassadors Attendance Report - ${date_iso}`);
-        const body = encodeURIComponent(
-          `Junior Ambassadors Attendance Report
+  const emailTo = "nwalton@svbtennisfoundation.org";
+  const emailCc = "kevin@svbtennisfoundation.org,classroom.connector@gmail.com";
+
+  const emailSubject = `Junior Ambassadors Attendance Report - ${date_iso}`;
+
+  const emailBody = `Junior Ambassadors Attendance Report
 Date: ${date_iso}
 
-Junior Students Present: ${inNow} of ${list.length}
-Ambassador Assistants Present: ${assistantNames.length}
-Coaches Present: ${coachesPresent.length} of ${COACHES.length}
+Students Present: ${inNow} of ${list.length}
 
-Junior Students Present:
-${presentNames.length ? presentNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
-
-Ambassador Assistants Present:
-${assistantNames.length ? assistantNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
 
 Coaches Present:
-${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`,
-        );
-        emailReportLink.onclick = () => {
-          window.SVBReportActions.openEmailDraftFromEncoded(subject, body);
-        };
-      }
-      function openEmailDraftFromEncoded(encodedSubject, encodedBody) {
-        window.SVBReportActions.openEmailDraft({
-          to: "nwalton@svbtennisfoundation.org",
-          cc: "kevin@svbtennisfoundation.org,classroom.connector@gmail.com",
-          subject: decodeURIComponent(encodedSubject || ""),
-          body: decodeURIComponent(encodedBody || ""),
-        });
-      }
+${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`;
 
-      
-
+  emailReportLink.onclick = () => {
+    window.SVBReportActions.openEmailDraft({
+      to: emailTo,
+      cc: emailCc,
+      subject: emailSubject,
+      body: emailBody,
+    });
+  };
+}
 
       function render() {
         grid.innerHTML = "";
@@ -1137,7 +1151,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
           showPinOverlay();
           return;
         }
-        counterEl.textContent = "Loading…";
+        counterEl.textContent = "Loading...";
         coachStatus = loadCoachStatus();
 
         const r1 = await loadRoster(pin);
@@ -1163,6 +1177,8 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
         render();
       }
 
+      window.SVB_PROGRAM_INFO_UPDATED = updateCounter;
+
       refreshBtn.onclick = refreshAll;
       dateEl.onchange = () => {
         coachStatus = loadCoachStatus();
@@ -1184,6 +1200,14 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
     </script>
   </body>
 </html>
+
+
+
+
+
+
+
+
 
 
 

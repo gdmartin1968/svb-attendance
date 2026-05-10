@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -9,7 +9,7 @@
     />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>West Zephyrhills Elementary Tennis — Today</title>
+    <title>West Zephyrhills Elementary Tennis â€” Today</title>
     <style>
       :root {
         --bg: #07111b;
@@ -233,7 +233,13 @@
       .pill {
         margin-top: 6px;
         color: #cfe;
-        font-size: 14px;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
       }
       .row {
         display: flex;
@@ -395,6 +401,56 @@
         color: #666;
       }
 
+      .assistantSection {
+        margin-top: 18px;
+      }
+      .assistantSectionTitle {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--muted);
+        margin-bottom: 8px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .assistantRow {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+      }
+      .assistantChip {
+        flex: 0 0 auto;
+        min-width: 130px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+      }
+      .assistantChip.present {
+        background: linear-gradient(135deg, #3498db, #21618c);
+        border-color: #5dade2;
+        box-shadow: 0 0 14px rgba(93, 173, 226, 0.45);
+      }
+      .assistantDot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.35);
+      }
+      .assistantChip.present .assistantDot {
+        background: #fff;
+      }
+
       .coachSection {
         margin-top: 18px;
       }
@@ -518,8 +574,8 @@
     <header>
       <div class="topbar">
         <div>
-          <h1>West Zephyrhills Elementary Tennis — Today</h1>
-          <div class="pill" id="dateInfo">Loading…</div>
+          <h1>West Zephyrhills Elementary Tennis - Today</h1>
+          <div class="pill" id="dateInfo">Loadingâ€¦</div>
         </div>
         <div class="row">
           <input id="date" type="date" />
@@ -527,6 +583,8 @@
           <a class="smallLink" href="/svb/rosters/index.html">Menu</a>
         </div>
       </div>
+
+      <div id="svbProgramInfoMount"></div>
 
       <div class="counterBig" id="counterTop">
         <span class="nums" id="counterTopNums">--</span> in attendance now
@@ -584,6 +642,11 @@
     <main>
       <div class="grid" id="grid"></div>
 
+      <section class="assistantSection">
+        <div class="assistantSectionTitle">Ambassador Assistants</div>
+        <div class="assistantRow" id="assistantRow"></div>
+      </section>
+
       <section class="coachSection">
         <div class="coachSectionTitle">Coaches</div>
         <div class="coachRow" id="coachRow"></div>
@@ -619,11 +682,28 @@
       </div>
     </div>
 
+    <script>
+      window.SVB_PROGRAM_INFO = {
+        programName: "West Zephyrhills Tennis",
+        rosterId: "westzephyrhills",
+        session: 9,
+        totalSessions: 16,
+        ageGroup: "elementary",
+        assistantLabel: "Teacher Assistant",
+        assistantNames: ["Ms. Bolt", "Other"],
+        meetingDays: ["Tuesday", "Thursday"],
+        closedDates: ["2026-05-25"],
+      };
+    </script>
+
+    <script src="/svb/program-info.js"></script>
+
     <script src="/svb/shared-report-actions.js"></script>
     <script>
       const SCRIPT_URL =
         "https://script.google.com/macros/s/AKfycbznvlI35ckcTD4jyLNhtokbPW58Ug4Xn5NRvbBL8VjvzUCorEg2VWPYjdUuPSFxEddt/exec";
       const ROSTER_ID = "westzephyrhills";
+      const ASSISTANT_ROSTER_ID = "ambassadors";
       const TZ_LABEL = "America/New_York";
       const PHOTO_BASE = "/photos/westzephyrhills_el/";
       const COACHES = ["Gordon", "Kevin", "Faith", "Andres", "Dante"];
@@ -645,7 +725,7 @@
         },
         {
           participant_id: "placeholder_3",
-          display_name: "in Google Sheet → rosters",
+          display_name: "in Google Sheet â†’ rosters",
           photo_url: "",
           grade: "",
         },
@@ -653,6 +733,7 @@
 
       const el = (id) => document.getElementById(id);
       const grid = el("grid");
+      const assistantRow = el("assistantRow");
       const coachRow = el("coachRow");
       const dateEl = el("date");
       const refreshBtn = el("refresh");
@@ -701,6 +782,7 @@
       function toggleCoach(name) {
         coachStatus[name] = !coachStatus[name];
         saveCoachStatus(coachStatus);
+        renderAssistantAmbassadors();
         renderCoaches();
         updateCounter();
       }
@@ -899,6 +981,7 @@
       }
 
       let roster = [];
+      let assistantRoster = [];
       let statusMap = {};
       let localChanges = {};
 
@@ -1110,6 +1193,14 @@
           pinGo.click();
       });
 
+      function assistantStatusKey(participantId) {
+        return "assistant_" + participantId;
+      }
+
+      function getAssistantStatus(participantId) {
+        return statusMap[assistantStatusKey(participantId)]?.status || "none";
+      }
+
       function loadRoster(pin) {
         return new Promise((resolve) => {
           const url =
@@ -1124,6 +1215,31 @@
             roster = (data.participants || []).filter(
               (p) => p && p.participant_id,
             );
+            resolve({ ok: true });
+          });
+        });
+      }
+
+      function loadAssistantRoster(pin) {
+        return new Promise((resolve) => {
+          const url =
+            SCRIPT_URL +
+            "?" +
+            qs({ action: "roster", pin, roster_id: ASSISTANT_ROSTER_ID });
+
+          jsonp(url, "cb_assistants_" + Date.now(), (data) => {
+            if (!data.ok) {
+              resolve({
+                ok: false,
+                error: data.error || "assistant_roster_failed",
+              });
+              return;
+            }
+
+            assistantRoster = (data.participants || []).filter(
+              (p) => p && p.participant_id,
+            );
+
             resolve({ ok: true });
           });
         });
@@ -1192,6 +1308,54 @@
         img.src = url;
       }
 
+      function renderAssistantAmbassadors() {
+        if (!assistantRow) return;
+
+        assistantRow.innerHTML = "";
+
+        assistantRoster.forEach((p) => {
+          const pid = p.participant_id;
+          const display = p.display_name || pid;
+          const statusKey = assistantStatusKey(pid);
+          const st = getAssistantStatus(pid);
+
+          const chip = document.createElement("div");
+          chip.className = "assistantChip" + (st === "in" ? " present" : "");
+          chip.innerHTML = `
+            <span class="assistantDot"></span>
+            <span>${display}</span>
+          `;
+
+          chip.onclick = () => {
+            const pin = getPin();
+
+            if (!pin) {
+              showPinOverlay();
+              return;
+            }
+
+            const newStatus = {
+              status: st === "in" ? "none" : "in",
+              ts: new Date().toISOString(),
+            };
+
+            logEvent(pin, {
+              participant_id: statusKey,
+              action: st === "in" ? "undo" : "signin",
+              status: newStatus.status,
+            });
+
+            statusMap[statusKey] = newStatus;
+            localChanges[statusKey] = newStatus;
+
+            render();
+            setTimeout(refreshAll, 1200);
+          };
+
+          assistantRow.appendChild(chip);
+        });
+      }
+
       function renderCoaches() {
         coachRow.innerHTML = "";
         COACHES.forEach((name) => {
@@ -1207,56 +1371,70 @@
       }
 
       function updateCounter() {
-        const list = roster.length ? roster : [];
-        let inNow = 0;
-        list.forEach((p) => {
-          const st = statusMap[p.participant_id]?.status || "none";
-          if (st === "in") inNow++;
-        });
+  const list = roster.length ? roster : [];
+  let inNow = 0;
+  const presentNames = [];
+  const ambassadorAssistantNames = [];
 
-        const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
-        const date_iso = dateEl.value;
+  list.forEach((p) => {
+    const st = statusMap[p.participant_id]?.status || "none";
+    if (st === "in") {
+      inNow++;
+      presentNames.push(p.display_name || p.participant_id);
+    }
+  });
 
-        dateInfoEl.textContent = `Date: ${date_iso}  •  ${TZ_LABEL}  •  Students on roster: ${list.length}  •  Coaches present: ${coachesPresent.length}/${COACHES.length}`;
+  assistantRoster.forEach((p) => {
+    const st = getAssistantStatus(p.participant_id);
+    if (st === "in") {
+      ambassadorAssistantNames.push(p.display_name || p.participant_id);
+    }
+  });
 
-        counterTopNums.textContent = inNow;
+  const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
+  const teacherAssistantsPresent = window.SVB_PROGRAM_ASSISTANTS_PRESENT || [];
+  const lessonNumber = window.SVB_PROGRAM_INFO?.session || "";
+  const date_iso = dateEl.value;
 
-        const presentNames = [];
-        list.forEach((p) => {
-          const st = statusMap[p.participant_id]?.status || "none";
-          if (st === "in") {
-            presentNames.push(p.display_name || p.participant_id);
-          }
-        });
+  dateInfoEl.textContent = `Students on roster: ${list.length} | Teacher Assistants: ${teacherAssistantsPresent.length} | Ambassador Assistants: ${ambassadorAssistantNames.length} | Coaches present: ${coachesPresent.length}/${COACHES.length}`;
 
-        const emailTo = "nwalton@svbtennisfoundation.org";
-        const emailCc = "kevin@svbtennisfoundation.org,classroom.connector@gmail.com";
+  counterTopNums.textContent = inNow;
 
-        const emailSubject = `West Zephyrhills Attendance Report - ${date_iso}`;
+  const emailTo = "nwalton@svbtennisfoundation.org";
+  const emailCc = "kevin@svbtennisfoundation.org,classroom.connector@gmail.com";
 
-        const emailBody = `West Zephyrhills Attendance Report
+  const emailSubject = `West Zephyrhills Attendance Report - Lesson ${lessonNumber} - ${date_iso}`;
+
+  const emailBody = `West Zephyrhills Attendance Report
 Date: ${date_iso}
+Lesson Number: ${lessonNumber}
 
 Students Present: ${inNow} of ${list.length}
+Teacher Assistants Present: ${teacherAssistantsPresent.length}
+Ambassador Assistants Present: ${ambassadorAssistantNames.length}
 Coaches Present: ${coachesPresent.length} of ${COACHES.length}
 
 Students Present:
 ${presentNames.length ? presentNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
 
+Teacher Assistants Present:
+${teacherAssistantsPresent.length ? teacherAssistantsPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
+
+Ambassador Assistants Present:
+${ambassadorAssistantNames.length ? ambassadorAssistantNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
+
 Coaches Present:
 ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`;
 
-        emailReportLink.onclick = () => {
-          window.SVBReportActions.openEmailDraft({
-            to: emailTo,
-            cc: emailCc,
-            subject: emailSubject,
-            body: emailBody,
-          });
-        };
-      }
-
-      
+  emailReportLink.onclick = () => {
+    window.SVBReportActions.openEmailDraft({
+      to: emailTo,
+      cc: emailCc,
+      subject: emailSubject,
+      body: emailBody,
+    });
+  };
+}
 
       function render() {
         grid.innerHTML = "";
@@ -1289,7 +1467,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
 
           const gradeEl = document.createElement("div");
           gradeEl.className = "gradeOverlay";
-          gradeEl.textContent = grade ? "Gr " + grade : "Gr —";
+          gradeEl.textContent = grade ? "Gr " + grade : "Gr â€”";
           photo.appendChild(gradeEl);
 
           const currentLvl = getLevel(pid);
@@ -1420,6 +1598,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
           grid.appendChild(card);
         });
 
+        renderAssistantAmbassadors();
         renderCoaches();
       }
 
@@ -1430,7 +1609,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
             showPinOverlay();
             return;
           }
-          dateInfoEl.textContent = "Loading…";
+          dateInfoEl.textContent = "Loadingâ€¦";
           coachStatus = loadCoachStatus();
 
           const r1 = await loadRoster(pin);
@@ -1438,6 +1617,18 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
             dateInfoEl.textContent =
               "Roster load failed: " + (r1.error || "unknown");
             return;
+          }
+
+          try {
+            const rAssistant = await loadAssistantRoster(pin);
+
+            if (!rAssistant.ok) {
+              console.warn("Assistant roster failed");
+              assistantRoster = [];
+            }
+          } catch (e) {
+            console.warn("Assistant roster exception", e);
+            assistantRoster = [];
           }
 
           const r2 = await loadStatus(pin);
@@ -1454,6 +1645,8 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
         }
       }
 
+      window.SVB_PROGRAM_INFO_UPDATED = updateCounter;
+
       refreshBtn.onclick = refreshAll;
       dateEl.onchange = () => {
         coachStatus = loadCoachStatus();
@@ -1465,12 +1658,21 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
         refreshAll();
       } else {
         coachStatus = loadCoachStatus();
+        renderAssistantAmbassadors();
         renderCoaches();
         showPinOverlay();
       }
     </script>
   </body>
 </html>
+
+
+
+
+
+
+
+
 
 
 
