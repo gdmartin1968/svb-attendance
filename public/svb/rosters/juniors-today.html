@@ -1032,6 +1032,8 @@ Date: ${date_iso}
 
 Students Present: ${inNow} of ${list.length}
 
+Students Present:
+${presentNames.length ? presentNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
 
 Coaches Present:
 ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`;
@@ -1200,18 +1202,3 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
     </script>
   </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   function injectStyles() {
     if (document.getElementById("svbProgramInfoStyles")) return;
 
@@ -115,8 +115,7 @@
       elementary: {
         9: {
           lesson: "Growth Mindset",
-          question:
-            "What’s your toughest subject in school and how can you get better?",
+          question: "What is your toughest subject in school and how can you get better?",
         },
       },
 
@@ -240,13 +239,15 @@
           }
         </div>
 
+        ${assistantNames.length ? `
+        ${assistantNames.length ? `
         <div class="programInfoMeta">
           <strong>${assistantLabel}:</strong>
-
           <div class="programInfoAssistantRow">
             ${renderAssistantChips()}
           </div>
-        </div>
+        </div>` : ""}
+        ` : ""}
 
       </section>
     `;
@@ -292,3 +293,7 @@
     init();
   }
 })();
+
+
+
+
