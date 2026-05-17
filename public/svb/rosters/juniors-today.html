@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -1002,32 +1002,41 @@
       }
 
       function updateCounter() {
-  const list = roster.length ? roster : [];
-  let inNow = 0;
-  const presentNames = [];
+        const list = roster.length ? roster : [];
+        let inNow = 0;
+        const presentNames = [];
 
-  list.forEach((p) => {
-    const st = statusMap[p.participant_id]?.status || "none";
-    if (st === "in") {
-      inNow++;
-      presentNames.push(p.display_name || p.participant_id);
-    }
-  });
+        list.forEach((p) => {
+          const st = statusMap[p.participant_id]?.status || "none";
+          if (st === "in") {
+            inNow++;
+            presentNames.push(p.display_name || p.participant_id);
+          }
+        });
 
-  const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
-  const teacherAssistantsPresent = window.SVB_PROGRAM_ASSISTANTS_PRESENT || [];
-  const date_iso = dateEl.value;
+        const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
 
-  counterEl.textContent = `Students on roster: ${list.length} | Coaches present: ${coachesPresent.length}/${COACHES.length}`;
+        const assistantNamesPresent = [];
+        assistantRoster.forEach((p) => {
+          const st = getAssistantStatus(p.participant_id);
+          if (st === "in") {
+            assistantNamesPresent.push(p.display_name || p.participant_id);
+          }
+        });
 
-  counterTopNums.textContent = inNow;
+        const date_iso = dateEl.value;
 
-  const emailTo = "nwalton@svbtennisfoundation.org";
-  const emailCc = "kevin@svbtennisfoundation.org,classroom.connector@gmail.com";
+        counterEl.textContent =
+          `Students on roster: ${list.length} | Coaches present: ${coachesPresent.length}/${COACHES.length} | Ambassador Assistants present: ${assistantNamesPresent.length}`;
 
-  const emailSubject = `Junior Ambassadors Attendance Report - ${date_iso}`;
+        counterTopNums.textContent = inNow;
 
-  const emailBody = `Junior Ambassadors Attendance Report
+        const emailTo = "nwalton@svbtennisfoundation.org";
+        const emailCc = "kevin@svbtennisfoundation.org,classroom.connector@gmail.com";
+
+        const emailSubject = `Junior Ambassadors Attendance Report - ${date_iso}`;
+
+        const emailBody = `Junior Ambassadors Attendance Report
 Date: ${date_iso}
 
 Students Present: ${inNow} of ${list.length}
@@ -1035,18 +1044,21 @@ Students Present: ${inNow} of ${list.length}
 Students Present:
 ${presentNames.length ? presentNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
 
+Ambassador Assistants Present:
+${assistantNamesPresent.length ? assistantNamesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
+
 Coaches Present:
 ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`;
 
-  emailReportLink.onclick = () => {
-    window.SVBReportActions.openEmailDraft({
-      to: emailTo,
-      cc: emailCc,
-      subject: emailSubject,
-      body: emailBody,
-    });
-  };
-}
+        emailReportLink.onclick = () => {
+          window.SVBReportActions.openEmailDraft({
+            to: emailTo,
+            cc: emailCc,
+            subject: emailSubject,
+            body: emailBody,
+          });
+        };
+      }
 
       function render() {
         grid.innerHTML = "";
@@ -1202,3 +1214,4 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
     </script>
   </body>
 </html>
+
