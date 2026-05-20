@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -513,7 +513,7 @@
     <script>
       /* ====== CONFIG ====== */
       const SCRIPT_URL =
-        "https://script.google.com/macros/s/AKfycbznvlI35ckcTD4jyLNhtokbPW58Ug4Xn5NRvbBL8VjvzUCorEg2VWPYjdUuPSFxEddt/exec";
+        "https://script.google.com/macros/s/AKfycbyi2H0yp75vtFH-PjeF8zSugL38uOnQK55AyS3S2D2TQa1RqYCm3wXznKUsB6C6WopK/exec";
       const ROSTER_ID = "juniors";
       const ASSISTANT_ROSTER_ID = "ambassadors";
       const TZ_LABEL = "America/New_York";
@@ -916,6 +916,17 @@
       }
 
       function logEvent(pin, payload) {
+        const fullPayload = Object.assign(
+          {
+            pin,
+            roster_id: ROSTER_ID,
+            date_iso: dateEl.value,
+            device: deviceLabel(),
+            actor: "coach",
+          },
+          payload,
+        );
+
         const url =
           SCRIPT_URL +
           "?" +
@@ -923,17 +934,58 @@
             Object.assign(
               {
                 action: "log",
-                pin,
-                roster_id: ROSTER_ID,
-                date_iso: dateEl.value,
-                device: deviceLabel(),
-                actor: "coach",
               },
-              payload,
+              fullPayload,
             ),
           );
+
         const img = new Image();
         img.src = url;
+
+        try {
+          const participant =
+            roster.find(
+              (p) => p.participant_id === payload.participant_id,
+            ) || {};
+
+          const coachesPresent = COACHES.filter(
+            (name) => !!coachStatus[name],
+          ).join(", ");
+
+          const teacherAssistantsPresent =
+            (window.SVB_PROGRAM_ASSISTANTS_PRESENT || []).join(", ");
+
+          const attendanceStatus =
+            payload.status === "in" ? "Present" : "Absent";
+
+          const attendanceUrl =
+            SCRIPT_URL +
+            "?" +
+            qs({
+              action: "attendance_log",
+              pin,
+              date_iso: dateEl.value,
+              roster_id: ROSTER_ID,
+              program_name:
+                window.SVB_PROGRAM_INFO?.programName ||
+                ROSTER_ID,
+              participant_id:
+                payload.participant_id || "",
+              student_name:
+                participant.display_name ||
+                payload.participant_id ||
+                "",
+              status: attendanceStatus,
+              coach_names: coachesPresent,
+              assistant_names: teacherAssistantsPresent,
+              source: "svb-roster",
+            });
+
+          const attendanceImg = new Image();
+          attendanceImg.src = attendanceUrl;
+        } catch (err) {
+          console.error("Attendance logging failed:", err);
+        }
       }
 
       /* ====== UI ====== */
@@ -1214,4 +1266,5 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
     </script>
   </body>
 </html>
+
 
