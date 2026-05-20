@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SVB Junior Ambassadors – Attendance</title>
+<title>SVB Junior Ambassadors â€“ Attendance</title>
 
 <style>
 body{font-family:system-ui;background:#0b1724;color:#ecf0f1;margin:0}
@@ -41,8 +41,8 @@ th.sticky,td.sticky{position:sticky;left:0;background:#fff;font-weight:700}
 <body>
 
 <header>
-  <h1>SVB Junior Ambassadors — Attendance</h1>
-  <div class="sub">Sundays 12–2pm (Zephyr Park)</div>
+  <h1>SVB Junior Ambassadors â€” Attendance</h1>
+  <div class="sub">Sundays 12â€“2pm (Zephyr Park)</div>
 </header>
 
 <main>
@@ -93,7 +93,7 @@ const kStatus =(i,d)=>`status_${i}_${d}`; // "none" | "in" | "out"
 const kInTime =(i,d)=>`in_${i}_${d}`;
 const kOutTime=(i,d)=>`out_${i}_${d}`;
 
-/* Optional prompts (stored but not displayed on main grid — we can add later) */
+/* Optional prompts (stored but not displayed on main grid â€” we can add later) */
 const kFeel   =(i,d)=>`feel_${i}_${d}`;
 const kTake   =(i,d)=>`take_${i}_${d}`;
 
@@ -185,7 +185,7 @@ function render(){
     const tr=document.createElement("tr");
     tr.innerHTML = `
       <td class="sticky">${name}</td>
-      <td>${present ? "✔" : ""}</td>
+      <td>${present ? "âœ”" : ""}</td>
       <td>${st==="none" ? "Not logged in" : (st==="in" ? "Signed in" : "Signed out")}</td>
     `;
     tbody.append(tr);

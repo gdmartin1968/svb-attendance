@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>Wesley Chapel Elementary — Today</title>
+    <title>Wesley Chapel Elementary â€” Today</title>
     <style>
       :root {
         --bg: #07111b;
@@ -409,10 +409,10 @@
       <div class="topbar">
         <div>
           <h1>
-            Wesley Chapel Elementary — Today
+            Wesley Chapel Elementary â€” Today
             <span style="opacity: 0.85">[weschapel]</span>
           </h1>
-          <div class="pill" id="dateInfo">Loading…</div>
+          <div class="pill" id="dateInfo">Loadingâ€¦</div>
         </div>
         <div class="row">
           <input id="date" type="date" />
@@ -522,7 +522,7 @@
         },
         {
           participant_id: "placeholder_3",
-          display_name: "in Google Sheet → rosters",
+          display_name: "in Google Sheet â†’ rosters",
           photo_url: "",
           grade: "",
         },
@@ -1003,7 +1003,7 @@
           }
         });
         const date_iso = dateEl.value;
-        dateInfoEl.textContent = `Date: ${date_iso}  •  ${TZ_LABEL}  •  Total roster: ${list.length}`;
+        dateInfoEl.textContent = `Date: ${date_iso}  â€¢  ${TZ_LABEL}  â€¢  Total roster: ${list.length}`;
         counterTopNums.textContent = inNow;
         
         // Update email report link
@@ -1063,7 +1063,7 @@
 
           const gradeEl = document.createElement("div");
           gradeEl.className = "gradeOverlay";
-          gradeEl.textContent = grade ? "Gr " + grade : "Gr —";
+          gradeEl.textContent = grade ? "Gr " + grade : "Gr â€”";
           photo.appendChild(gradeEl);
           
           // Level badge
@@ -1188,7 +1188,7 @@
         try {
           const pin = getPin();
           if (!pin) { showPinOverlay(); return; }
-          dateInfoEl.textContent = "Loading…";
+          dateInfoEl.textContent = "Loadingâ€¦";
           const r1 = await loadRoster(pin);
           if (!r1.ok) {
             dateInfoEl.textContent = "Roster load failed: " + (r1.error || "unknown");
@@ -1221,6 +1221,7 @@
     </script>
   </body>
 </html>
+
 
 
 
