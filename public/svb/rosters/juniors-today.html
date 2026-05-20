@@ -446,6 +446,13 @@
         <button class="modeBtn active" id="modeAttendance">Attendance</button>
         <button class="modeBtn" id="modeGroups">Groups</button>
         <span style="margin-left: 16px">|</span>
+        <button
+          id="finalizeAttendance"
+          class="sortBtn"
+          style="border: none; cursor: pointer; color: #fff; font-weight: 900; background: linear-gradient(135deg, #8e44ad, #5b2c6f)"
+        >
+          Finalize Attendance
+        </button>
         <button id="emailReport" style="background: none; border: none; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; padding: 0;">
           Email Report
         </button>
@@ -551,6 +558,7 @@
       const colorBar = el("colorBar");
       const clearAllLevelsBtn = el("clearAllLevels");
       const emailReportLink = el("emailReport");
+      const finalizeAttendanceBtn = el("finalizeAttendance");
       const pinOverlay = el("pinOverlay");
       const pinInput = el("pinInput");
       const pinGo = el("pinGo");
@@ -1053,7 +1061,61 @@
         });
       }
 
-      function updateCounter() {
+      function saveAttendanceSnapshot() {
+  const pin = getPin();
+
+  if (!pin) {
+    showPinOverlay();
+    return;
+  }
+
+  if (!roster.length) {
+    alert("Roster empty. Nothing to finalize.");
+    return;
+  }
+
+  const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
+  const teacherAssistantsPresent = window.SVB_PROGRAM_ASSISTANTS_PRESENT || [];
+  const lessonNumber = window.SVB_PROGRAM_INFO?.session || "";
+  const programName = window.SVB_PROGRAM_INFO?.programName || ROSTER_ID;
+
+  const confirmed = confirm(
+    `Finalize attendance for ${programName} on ${dateEl.value}?\n\nThis will save one official Present/Absent row per student.`
+  );
+
+  if (!confirmed) return;
+
+  roster.forEach((p) => {
+    const st = statusMap[p.participant_id]?.status || "none";
+    const finalStatus = st === "in" ? "Present" : "Absent";
+
+    const snapshotUrl =
+      SCRIPT_URL +
+      "?" +
+      qs({
+        action: "attendance_snapshot",
+        pin,
+        date_iso: dateEl.value,
+        roster_id: ROSTER_ID,
+        program_name: programName,
+        session_number: lessonNumber,
+        participant_id: p.participant_id || "",
+        student_name: p.display_name || p.participant_id || "",
+        final_status: finalStatus,
+        coach_names: coachesPresent.join(", "),
+        assistant_names: teacherAssistantsPresent.join(", "),
+        finalized_by: "coach",
+        source: "svb-roster-finalized",
+      });
+
+    const img = new Image();
+    img.src = snapshotUrl;
+  });
+
+  alert("Attendance snapshot finalized and sent to Google Sheets.");
+}
+
+function updateCounter() {
         const list = roster.length ? roster : [];
         let inNow = 0;
         const presentNames = [];
@@ -1110,6 +1172,8 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
             body: emailBody,
           });
         };
+
+  finalizeAttendanceBtn.onclick = saveAttendanceSnapshot;
       }
 
       function render() {
@@ -1266,6 +1330,8 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
     </script>
   </body>
 </html>
+
+
 
 
 
