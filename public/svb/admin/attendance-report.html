@@ -1,0 +1,322 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SVB Attendance Report</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #071421;
+      color: #eef6ff;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 28px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      border-radius: 12px;
+      border: 1px solid #35516d;
+      padding: 12px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background: #2ecc71;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 900;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      font-size: 13px;
+    }
+
+    th, td {
+      border: 1px solid rgba(255,255,255,0.18);
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background: rgba(255,255,255,0.12);
+      position: sticky;
+      top: 0;
+    }
+
+    td.name {
+      text-align: left;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .present {
+      background: rgba(46, 204, 113, 0.35);
+    }
+
+    .absent {
+      background: rgba(231, 76, 60, 0.38);
+    }
+
+    .riskHigh {
+      background: rgba(231, 76, 60, 0.3);
+      font-weight: 900;
+    }
+
+    .riskMedium {
+      background: rgba(241, 196, 15, 0.28);
+      font-weight: 900;
+    }
+
+    .summaryGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .metric {
+      background: rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 24px;
+      margin-top: 4px;
+    }
+
+    .hint {
+      color: #b8c7d8;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>SVB Attendance Report</h1>
+
+  <div class="card">
+    <p class="hint">
+      Paste attendance data below. Recommended columns:
+      <strong>date, program, student, status</strong>.
+      Status can be Present, Absent, P, A, true, false, yes, or no.
+    </p>
+
+    <textarea id="attendanceInput" placeholder="date,program,student,status&#10;2026-05-01,Stewart Tennis,Joshua Dlugi,Present&#10;2026-05-06,Stewart Tennis,Joshua Dlugi,Absent"></textarea>
+
+    <button onclick="buildReport()">Build Report</button>
+  </div>
+
+  <div id="report"></div>
+
+  <script>
+    function parseCsvLine(line) {
+      const result = [];
+      let current = "";
+      let insideQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+
+        if (char === '"') {
+          insideQuotes = !insideQuotes;
+        } else if (char === "," && !insideQuotes) {
+          result.push(current.trim());
+          current = "";
+        } else {
+          current += char;
+        }
+      }
+
+      result.push(current.trim());
+      return result;
+    }
+
+    function normalizeStatus(value) {
+      const text = String(value || "").trim().toLowerCase();
+
+      return (
+        text === "present" ||
+        text === "p" ||
+        text === "yes" ||
+        text === "true" ||
+        text === "1"
+      );
+    }
+
+    function buildReport() {
+      const raw = document.getElementById("attendanceInput").value.trim();
+      const report = document.getElementById("report");
+
+      if (!raw) {
+        report.innerHTML = "<div class='card'>Paste attendance data first.</div>";
+        return;
+      }
+
+      const lines = raw.split(/\r?\n/).filter(Boolean);
+      const headers = parseCsvLine(lines[0]).map(h => h.toLowerCase());
+
+      const dateIndex = headers.indexOf("date");
+      const programIndex = headers.indexOf("program");
+      const studentIndex = headers.indexOf("student");
+      const statusIndex = headers.indexOf("status");
+
+      if (
+        dateIndex === -1 ||
+        programIndex === -1 ||
+        studentIndex === -1 ||
+        statusIndex === -1
+      ) {
+        report.innerHTML = "<div class='card'>Missing required columns: date, program, student, status.</div>";
+        return;
+      }
+
+      const rows = lines.slice(1).map(line => {
+        const parts = parseCsvLine(line);
+
+        return {
+          date: parts[dateIndex],
+          program: parts[programIndex],
+          student: parts[studentIndex],
+          present: normalizeStatus(parts[statusIndex]),
+        };
+      });
+
+      const dates = [...new Set(rows.map(r => r.date))].sort();
+      const students = [...new Set(rows.map(r => r.student))].sort();
+      const programs = [...new Set(rows.map(r => r.program))].sort();
+
+      const byStudentDate = {};
+
+      rows.forEach(row => {
+        const key = row.student + "|" + row.date;
+        byStudentDate[key] = row.present;
+      });
+
+      const studentStats = students.map(student => {
+        let presentCount = 0;
+        let absentCount = 0;
+        let consecutiveMisses = 0;
+
+        dates.forEach(date => {
+          const key = student + "|" + date;
+          const present = byStudentDate[key];
+
+          if (present === true) {
+            presentCount++;
+            consecutiveMisses = 0;
+          } else {
+            absentCount++;
+            consecutiveMisses++;
+          }
+        });
+
+        const attendanceRate =
+          dates.length ? Math.round((presentCount / dates.length) * 100) : 0;
+
+        let risk = "Low";
+
+        if (consecutiveMisses >= 3 || attendanceRate < 60) {
+          risk = "High";
+        } else if (consecutiveMisses >= 2 || attendanceRate < 75) {
+          risk = "Medium";
+        }
+
+        return {
+          student,
+          presentCount,
+          absentCount,
+          consecutiveMisses,
+          attendanceRate,
+          risk,
+        };
+      });
+
+      const highRisk = studentStats.filter(s => s.risk === "High").length;
+      const mediumRisk = studentStats.filter(s => s.risk === "Medium").length;
+
+      let html = `
+        <div class="card">
+          <h2>Summary</h2>
+          <div class="summaryGrid">
+            <div class="metric">Programs<strong>${programs.length}</strong></div>
+            <div class="metric">Students<strong>${students.length}</strong></div>
+            <div class="metric">Sessions/Dates<strong>${dates.length}</strong></div>
+            <div class="metric">High Risk<strong>${highRisk}</strong></div>
+            <div class="metric">Medium Risk<strong>${mediumRisk}</strong></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Attendance Pattern Heatmap</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Student</th>
+                ${dates.map(date => `<th>${date}</th>`).join("")}
+                <th>Attendance %</th>
+                <th>Consecutive Misses</th>
+                <th>Risk</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      studentStats.forEach(stat => {
+        const riskClass =
+          stat.risk === "High"
+            ? "riskHigh"
+            : stat.risk === "Medium"
+              ? "riskMedium"
+              : "";
+
+        html += `
+          <tr>
+            <td class="name">${stat.student}</td>
+            ${dates.map(date => {
+              const present = byStudentDate[stat.student + "|" + date];
+
+              return `<td class="${present ? "present" : "absent"}">${present ? "✓" : "✕"}</td>`;
+            }).join("")}
+            <td>${stat.attendanceRate}%</td>
+            <td>${stat.consecutiveMisses}</td>
+            <td class="${riskClass}">${stat.risk}</td>
+          </tr>
+        `;
+      });
+
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      report.innerHTML = html;
+    }
+  </script>
+</body>
+</html>
