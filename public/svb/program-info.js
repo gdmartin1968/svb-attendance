@@ -215,32 +215,19 @@
       high: {},
     };
 
-    const PROGRAM_START_DATES = {
-      stewart_tennis: "2026-03-30",
-      watergrass: "2026-03-30",
-      woodland_tiny_tennis: "2026-04-01",
-      west_zephyrhills: "2026-04-01",
+    const PROGRAM_CURRENT_SESSIONS = {
+      stewart_tennis: 9,
+      watergrass: 9,
+      woodland_tiny_tennis: 9,
+      west_zephyrhills: 9,
     };
 
     function calculateSession(rosterId) {
-      const startDateString = PROGRAM_START_DATES[rosterId];
-
-      if (!startDateString) return config.session || 1;
-
-      const startDate = new Date(startDateString);
-      const today = new Date();
-
-      const diffMs =
-        today.setHours(0, 0, 0, 0) -
-        startDate.setHours(0, 0, 0, 0);
-
-      const diffDays =
-        Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-      const calculatedSession =
-        Math.floor(diffDays / 7) + 1;
-
-      return Math.max(1, Math.min(calculatedSession, 16));
+      return (
+        PROGRAM_CURRENT_SESSIONS[rosterId] ||
+        config.session ||
+        1
+      );
     }
 
     const session = calculateSession(config.rosterId);
@@ -400,4 +387,5 @@
     init();
   }
 })();
+
 
