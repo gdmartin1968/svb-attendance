@@ -62,6 +62,18 @@
         color: #cfe;
       }
 
+      .programInfoScheduleNotice {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(255, 193, 7, 0.16);
+        border: 1px solid rgba(255, 193, 7, 0.35);
+        color: #fff7d6;
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1.35;
+      }
+
       .programInfoAssistantRow {
         display: flex;
         flex-wrap: wrap;
@@ -215,22 +227,232 @@
       high: {},
     };
 
-    const PROGRAM_CURRENT_SESSIONS = {
-      stewart_tennis: 9,
-      watergrass: 9,
-      woodland_tiny_tennis: 9,
-      west_zephyrhills: 9,
+    const PROGRAM_SCHEDULES = {
+      stewart_tennis: {
+        programName: "Stewart Tennis",
+        startDate: "2026-04-13",
+        meetingDays: [1, 3],
+        time: "1:45 - 3:45pm",
+        totalSessions: 16,
+      },
+
+      watergrass: {
+        programName: "Watergrass Elementary Tennis",
+        startDate: "2026-04-13",
+        meetingDays: [1, 3],
+        time: "3:45 - 5:45pm",
+        totalSessions: 16,
+      },
+
+      woodland_tiny_tennis: {
+        programName: "Woodland Tiny Tennis",
+        startDate: "2026-04-14",
+        meetingDays: [2, 4],
+        time: "2:40 - 4:10pm",
+        totalSessions: 16,
+      },
+
+      west_zephyrhills: {
+        programName: "West Zephyrhills Elementary Tennis",
+        startDate: "2026-04-14",
+        meetingDays: [2, 4],
+        time: "4:15 - 5:45pm",
+        totalSessions: 16,
+      },
     };
 
-    function calculateSession(rosterId) {
-      return (
-        PROGRAM_CURRENT_SESSIONS[rosterId] ||
-        config.session ||
-        1
-      );
+    function parseLocalDate(dateString) {
+      const [year, month, day] = dateString
+        .split("-")
+        .map(Number);
+
+      return new Date(year, month - 1, day);
     }
 
-    const session = calculateSession(config.rosterId);
+    function formatLocalDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+
+      return `${year}-${month}-${day}`;
+    }
+
+    function addDays(date, days) {
+      const next = new Date(date);
+      next.setDate(next.getDate() + days);
+      return next;
+    }
+
+    function nthWeekdayOfMonth(year, monthIndex, weekday, nth) {
+      const date = new Date(year, monthIndex, 1);
+
+      while (date.getDay() !== weekday) {
+        date.setDate(date.getDate() + 1);
+      }
+
+      date.setDate(date.getDate() + (nth - 1) * 7);
+      return date;
+    }
+
+    function lastWeekdayOfMonth(year, monthIndex, weekday) {
+      const date = new Date(year, monthIndex + 1, 0);
+
+      while (date.getDay() !== weekday) {
+        date.setDate(date.getDate() - 1);
+      }
+
+      return date;
+    }
+
+    function getUSHolidays(year) {
+      const holidays = {};
+
+      function add(date, name) {
+        holidays[formatLocalDate(date)] = name;
+      }
+
+      add(new Date(year, 0, 1), "New Year's Day");
+      add(nthWeekdayOfMonth(year, 0, 1, 3), "Martin Luther King Jr. Day");
+      add(nthWeekdayOfMonth(year, 1, 1, 3), "Presidents' Day");
+      add(lastWeekdayOfMonth(year, 4, 1), "Memorial Day");
+      add(new Date(year, 5, 19), "Juneteenth");
+      add(new Date(year, 6, 4), "Independence Day");
+      add(nthWeekdayOfMonth(year, 8, 1, 1), "Labor Day");
+      add(nthWeekdayOfMonth(year, 9, 1, 2), "Columbus Day / Indigenous Peoples' Day");
+      add(new Date(year, 10, 11), "Veterans Day");
+      add(nthWeekdayOfMonth(year, 10, 4, 4), "Thanksgiving Day");
+      add(new Date(year, 11, 25), "Christmas Day");
+
+      return holidays;
+    }
+
+    function getHolidayName(date) {
+      const year = date.getFullYear();
+      const holidays = {
+        ...getUSHolidays(year - 1),
+        ...getUSHolidays(year),
+        ...getUSHolidays(year + 1),
+      };
+
+      return holidays[formatLocalDate(date)] || "";
+    }
+
+    function generateSessionSchedule(rosterId) {
+      const program = PROGRAM_SCHEDULES[rosterId];
+
+      if (!program) return [];
+
+      const schedule = [];
+      let date = parseLocalDate(program.startDate);
+      let sessionNumber = 1;
+      let safetyCounter = 0;
+
+      while (
+        sessionNumber <= program.totalSessions &&
+        safetyCounter < 180
+      ) {
+        const isMeetingDay =
+          program.meetingDays.includes(date.getDay());
+
+        if (isMeetingDay) {
+          const holidayName = getHolidayName(date);
+
+          if (holidayName) {
+            schedule.push({
+              date: formatLocalDate(date),
+              displayDate: date.toLocaleDateString(undefined, {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+              }),
+              holidayName,
+              skipped: true,
+              note: "No session proposed - holiday",
+            });
+          } else {
+            schedule.push({
+              session: sessionNumber,
+              date: formatLocalDate(date),
+              displayDate: date.toLocaleDateString(undefined, {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+              }),
+              holidayName: "",
+              skipped: false,
+              time: program.time,
+            });
+
+            sessionNumber += 1;
+          }
+        }
+
+        date = addDays(date, 1);
+        safetyCounter += 1;
+      }
+
+      return schedule;
+    }
+
+    function getScheduleMeta(rosterId) {
+      const program = PROGRAM_SCHEDULES[rosterId];
+      const schedule = generateSessionSchedule(rosterId);
+
+      if (!program || !schedule.length) {
+        return {
+          schedule,
+          notice: "",
+          currentSession: config.session || 1,
+        };
+      }
+
+      const today = new Date();
+      const todayKey = formatLocalDate(today);
+
+      const completedSessions = schedule.filter((item) => {
+        return !item.skipped && item.date <= todayKey;
+      });
+
+      const current =
+        completedSessions[completedSessions.length - 1] ||
+        schedule.find((item) => !item.skipped);
+
+      const next =
+        schedule.find((item) => {
+          return !item.skipped && item.date >= todayKey;
+        }) || null;
+
+      const upcomingHoliday =
+        schedule.find((item) => {
+          return item.skipped && item.date >= todayKey;
+        }) || null;
+
+      let notice = "";
+
+      if (upcomingHoliday) {
+        notice =
+          `Holiday flag: ${upcomingHoliday.displayDate} is ${upcomingHoliday.holidayName}. ` +
+          "That date is skipped and the next class session is pushed forward.";
+      }
+
+      window.SVB_PROGRAM_GENERATED_SCHEDULE = schedule;
+
+      return {
+        schedule,
+        notice,
+        currentSession: current?.session || config.session || 1,
+        currentDate: current?.displayDate || "",
+        nextSession: next,
+        upcomingHoliday,
+      };
+    }
+
+    function calculateSession(rosterId) {
+      return getScheduleMeta(rosterId).currentSession;
+    }
+
+    const scheduleMeta = getScheduleMeta(config.rosterId);
+    const session = scheduleMeta.currentSession;
     const totalSessions = config.totalSessions || 16;
 
     const ageGroup = config.ageGroup || "elementary";
@@ -387,5 +609,7 @@
     init();
   }
 })();
+
+
 
 
