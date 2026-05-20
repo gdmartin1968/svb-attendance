@@ -1,0 +1,16 @@
+node_modules
+dist
+.DS_Store
+server/public
+vite.config.ts.*
+*.tar.gz.local/
+.replit
+attached_assets/
+client/
+shared/
+svb-deploy/
+student_headshots_clean.zip
+roster-update.patch
+replit.md
+design_guidelines.md
+drizzle.config.ts
