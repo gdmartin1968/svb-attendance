@@ -113,30 +113,137 @@
 
     const QUESTION_BANKS = {
       elementary: {
+        1: {
+          lesson: "The 5 Pillars for Success",
+          question:
+            "Which pillar is your biggest strength right now?",
+        },
+
+        2: {
+          lesson: "Parts of the Court",
+          question:
+            "What part of tennis do you want to improve most?",
+        },
+
+        3: {
+          lesson: "Citizenship",
+          question:
+            "What does being a good citizen mean to you?",
+        },
+
+        4: {
+          lesson: "Champion Mindset",
+          question:
+            "What is one way you can think more positively?",
+        },
+
+        5: {
+          lesson: "Responsibility",
+          question:
+            "What responsibility do you handle well already?",
+        },
+
+        6: {
+          lesson: "Purpose & Focus",
+          question:
+            "Why is focus important when learning something difficult?",
+        },
+
+        7: {
+          lesson: "Tennis Scoring",
+          question:
+            "What part of tennis scoring is easiest for you?",
+        },
+
+        8: {
+          lesson: "Goal Setting",
+          question:
+            "What is one goal you want to accomplish this year?",
+        },
+
         9: {
-          lesson: "Growth Mindset",
-          question: "What is your toughest subject in school and how can you get better?",
+          lesson: "Trustworthiness",
+          question:
+            "Why is trust important in friendships and teamwork?",
+        },
+
+        10: {
+          lesson: "Leadership",
+          question:
+            "What qualities make someone a good leader?",
+        },
+
+        11: {
+          lesson: "Tennis Racquet Parts",
+          question:
+            "What part of the racquet helps you control the ball?",
+        },
+
+        12: {
+          lesson: "100 Tennis Facts",
+          question:
+            "What is one interesting thing you learned about tennis?",
+        },
+
+        13: {
+          lesson: "Reflection",
+          question:
+            "What are you most proud of learning this season?",
+        },
+
+        14: {
+          lesson: "Perseverance",
+          question:
+            "What is something difficult you kept working on?",
+        },
+
+        15: {
+          lesson: "Confidence",
+          question:
+            "What helps you feel confident?",
+        },
+
+        16: {
+          lesson: "Celebration",
+          question:
+            "What achievement are you proudest of this year?",
         },
       },
 
-      middle: {
-        9: {
-          lesson: "Growth Mindset",
-          question:
-            "What is one challenge you are working through, and what is your plan to improve?",
-        },
-      },
+      middle: {},
 
-      high: {
-        9: {
-          lesson: "Growth Mindset",
-          question:
-            "What is a weakness you are actively developing into a strength?",
-        },
-      },
+      high: {},
     };
 
-    const session = config.session || 1;
+    const PROGRAM_START_DATES = {
+      stewart_tennis: "2026-03-30",
+      watergrass: "2026-03-30",
+      woodland_tiny_tennis: "2026-04-01",
+      west_zephyrhills: "2026-04-01",
+    };
+
+    function calculateSession(rosterId) {
+      const startDateString = PROGRAM_START_DATES[rosterId];
+
+      if (!startDateString) return config.session || 1;
+
+      const startDate = new Date(startDateString);
+      const today = new Date();
+
+      const diffMs =
+        today.setHours(0, 0, 0, 0) -
+        startDate.setHours(0, 0, 0, 0);
+
+      const diffDays =
+        Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+      const calculatedSession =
+        Math.floor(diffDays / 7) + 1;
+
+      return Math.max(1, Math.min(calculatedSession, 16));
+    }
+
+    const session = calculateSession(config.rosterId);
     const totalSessions = config.totalSessions || 16;
 
     const ageGroup = config.ageGroup || "elementary";
@@ -293,7 +400,4 @@
     init();
   }
 })();
-
-
-
 
