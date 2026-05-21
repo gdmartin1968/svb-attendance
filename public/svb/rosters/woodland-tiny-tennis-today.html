@@ -640,7 +640,7 @@
       window.SVB_PROGRAM_INFO = {
         programName: "Woodland Tiny Tennis",
         rosterId: "woodland_tiny_tennis",
-        session: 9,
+        session: 12,
         totalSessions: 16,
         ageGroup: "elementary",
         assistantLabel: "Teacher Assistant",
@@ -1197,6 +1197,17 @@
         });
       }
 
+      function getCurrentSessionNumber() {
+        const displayedSession =
+          document.querySelector(".programInfoSession")?.textContent || "";
+
+        const match = displayedSession.match(/Session\s+(\d+)/i);
+
+        if (match) return match[1];
+
+        return String(window.SVB_PROGRAM_INFO?.session || 12);
+      }
+
       function logEvent(pin, payload) {
         const url =
           SCRIPT_URL +
@@ -1247,7 +1258,7 @@
 
   const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
   const teacherAssistantsPresent = window.SVB_PROGRAM_ASSISTANTS_PRESENT || [];
-  const lessonNumber = window.SVB_PROGRAM_INFO?.session || "";
+  const lessonNumber = getCurrentSessionNumber();
   const programName = window.SVB_PROGRAM_INFO?.programName || ROSTER_ID;
 
   const confirmed = confirm(
@@ -1301,7 +1312,7 @@ function updateCounter() {
 
   const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
   const teacherAssistantsPresent = window.SVB_PROGRAM_ASSISTANTS_PRESENT || [];
-  const lessonNumber = window.SVB_PROGRAM_INFO?.session || "";
+  const lessonNumber = getCurrentSessionNumber();
   const date_iso = dateEl.value;
 
   dateInfoEl.textContent = `Students on roster: ${list.length} • Teacher Assistants: ${teacherAssistantsPresent.length} • Coaches present: ${coachesPresent.length}/${COACHES.length}`;
@@ -1557,31 +1568,3 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
     </script>
   </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
