@@ -695,7 +695,7 @@
       window.SVB_PROGRAM_INFO = {
         programName: "Watergrass Tennis",
         rosterId: "watergrass",
-        session: 9,
+        session: 12,
         totalSessions: 16,
         ageGroup: "elementary",
         assistantLabel: "Teacher Assistant",
@@ -1285,6 +1285,17 @@
         });
       }
 
+      function getCurrentSessionNumber() {
+        const displayedSession =
+          document.querySelector(".programInfoSession")?.textContent || "";
+
+        const match = displayedSession.match(/Session\s+(\d+)/i);
+
+        if (match) return match[1];
+
+        return String(window.SVB_PROGRAM_INFO?.session || 12);
+      }
+
       function logEvent(pin, payload) {
         const url =
           SCRIPT_URL +
@@ -1383,7 +1394,7 @@
 
   const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
   const teacherAssistantsPresent = window.SVB_PROGRAM_ASSISTANTS_PRESENT || [];
-  const session = window.SVB_PROGRAM_INFO?.session || "";
+  const sessionNumber = getCurrentSessionNumber();
   const programName = window.SVB_PROGRAM_INFO?.programName || ROSTER_ID;
 
   const confirmed = confirm(
@@ -1405,7 +1416,7 @@
         date_iso: dateEl.value,
         roster_id: ROSTER_ID,
         program_name: programName,
-        session_number: lessonNumber,
+        session_number: sessionNumber,
         participant_id: p.participant_id || "",
         student_name: p.display_name || p.participant_id || "",
         final_status: finalStatus,
@@ -1445,7 +1456,7 @@ function updateCounter() {
 
   const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
   const teacherAssistantsPresent = window.SVB_PROGRAM_ASSISTANTS_PRESENT || [];
-  const session = window.SVB_PROGRAM_INFO?.session || "";
+  const sessionNumber = getCurrentSessionNumber();
   const date_iso = dateEl.value;
 
   dateInfoEl.textContent = `Students on roster: ${list.length} • Teacher Assistants: ${teacherAssistantsPresent.length} • Coaches present: ${coachesPresent.length}/${COACHES.length}`;
@@ -1454,16 +1465,11 @@ function updateCounter() {
 
   const emailTo = "nwalton@svbtennisfoundation.org";
   const emailCc = "kevin@svbtennisfoundation.org,classroom.connector@gmail.com";
-
-  const lessonNumber = window.SVB_PROGRAM_INFO?.session || 12;
-
-
-
-  const emailSubject = `Watergrass Attendance Report - Session ${session} - ${date_iso}`;
+const emailSubject = `Watergrass Attendance Report - Session ${sessionNumber} - ${date_iso}`;
 
   const emailBody = `Watergrass Attendance Report
 Date: ${date_iso}
-Session Number: ${lessonNumber}
+Session Number: ${sessionNumber}
 
 Students Present: ${inNow} of ${list.length}
 Teacher Assistants Present: ${teacherAssistantsPresent.length}
@@ -1719,28 +1725,4 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
     </script>
   </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
