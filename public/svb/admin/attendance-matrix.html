@@ -1,0 +1,249 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SVB Attendance Matrix</title>
+  <style>
+    body { margin: 0; font-family: system-ui; background: #07111b; color: #eaf2ff; }
+    main { padding: 20px; max-width: 1400px; margin: 0 auto; }
+    h1 { margin: 0 0 12px; font-size: 32px; }
+    .card { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16); border-radius: 18px; padding: 16px; margin: 16px 0; }
+    textarea { width: 100%; min-height: 180px; border-radius: 14px; padding: 12px; font-family: ui-monospace, Consolas, monospace; font-size: 14px; }
+    button, select { padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: #16a085; color: white; font-weight: 800; cursor: pointer; }
+    select { background: #17212b; }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 14px; background: white; color: #111; font-size: 13px; }
+    th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: center; white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: #f6f8fb; z-index: 1; }
+    th { background: #dfe7f3; position: sticky; top: 0; z-index: 2; }
+    .present { background: #d5f5e3; font-weight: 900; }
+    .absent { background: #fadbd8; font-weight: 900; }
+    .risk { background: #ffeb99 !important; }
+    .summaryGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .metric { background: rgba(255,255,255,.08); border-radius: 14px; padding: 12px; }
+    .metric strong { display: block; font-size: 26px; color: #9ff3dc; }
+    .scroll { overflow: auto; max-height: 70vh; border-radius: 14px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>SVB Attendance Matrix</h1>
+
+  <div class="card">
+    <p>Paste rows from <b>Attendance_Snapshots</b>. Include the header row.</p>
+    <textarea id="rawInput" placeholder="timestamp    date    roster_id    program_name    session_number    student_id    student_name    final_status    coach_names    assistant_names    finalized_by    source"></textarea>
+
+    <div class="controls">
+      <button id="buildBtn">Build Matrix</button>
+      <select id="programFilter">
+        <option value="">All Programs</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="summaryGrid" id="summary"></div>
+  </div>
+
+  <div class="card">
+    <h2>Risk Flags</h2>
+    <div id="riskList">Paste attendance snapshot data first.</div>
+  </div>
+
+  <div class="card scroll">
+    <div id="matrix">Paste attendance snapshot data first.</div>
+  </div>
+</main>
+
+<script>
+  const rawInput = document.getElementById("rawInput");
+  const buildBtn = document.getElementById("buildBtn");
+  const programFilter = document.getElementById("programFilter");
+  const summary = document.getElementById("summary");
+  const riskList = document.getElementById("riskList");
+  const matrix = document.getElementById("matrix");
+
+  let allRows = [];
+
+  function parseRows(text) {
+    const lines = text.trim().split(/\r?\n/).filter(Boolean);
+    if (lines.length < 2) return [];
+
+    const delimiter = lines[0].includes("\t") ? "\t" : ",";
+    const headers = lines[0].split(delimiter).map(h => h.trim());
+
+    return lines.slice(1).map(line => {
+      const cells = line.split(delimiter);
+      const row = {};
+      headers.forEach((h, i) => row[h] = (cells[i] || "").trim());
+      return row;
+    }).filter(r => r.student_id && r.date);
+  }
+
+  function attendanceStats(rows) {
+    const total = rows.length;
+    const present = rows.filter(r => String(r.final_status).toLowerCase() === "present").length;
+    const absent = rows.filter(r => String(r.final_status).toLowerCase() === "absent").length;
+    const pct = total ? Math.round((present / total) * 100) : 0;
+    return { total, present, absent, pct };
+  }
+
+  function buildProgramOptions(rows) {
+    const programs = [...new Set(rows.map(r => r.program_name || r.roster_id).filter(Boolean))].sort();
+    const current = programFilter.value;
+    programFilter.innerHTML = '<option value="">All Programs</option>';
+    programs.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p;
+      opt.textContent = p;
+      programFilter.appendChild(opt);
+    });
+    programFilter.value = current;
+  }
+
+  function buildReport() {
+    const selectedProgram = programFilter.value;
+
+    const rows = selectedProgram
+      ? allRows.filter(r => (r.program_name || r.roster_id) === selectedProgram)
+      : allRows;
+
+    if (!rows.length) {
+      matrix.textContent = "No rows match this filter.";
+      riskList.textContent = "No rows match this filter.";
+      summary.innerHTML = "";
+      return;
+    }
+
+    const dates = [...new Set(rows.map(r => r.date))].sort();
+    const students = {};
+
+    rows.forEach(r => {
+      const key = r.student_id;
+      if (!students[key]) {
+        students[key] = {
+          name: r.student_name || r.student_id,
+          program: r.program_name || r.roster_id,
+          dates: {}
+        };
+      }
+      students[key].dates[r.date] = r.final_status;
+    });
+
+    const stats = attendanceStats(rows);
+    summary.innerHTML = `
+      <div class="metric">Rows<strong>${stats.total}</strong></div>
+      <div class="metric">Present<strong>${stats.present}</strong></div>
+      <div class="metric">Absent<strong>${stats.absent}</strong></div>
+      <div class="metric">Attendance %<strong>${stats.pct}%</strong></div>
+      <div class="metric">Sessions<strong>${dates.length}</strong></div>
+      <div class="metric">Students<strong>${Object.keys(students).length}</strong></div>
+    `;
+
+    const risks = [];
+
+    Object.values(students).forEach(s => {
+      let present = 0;
+      let absent = 0;
+      let consecutiveAbsences = 0;
+      let maxConsecutiveAbsences = 0;
+
+      dates.forEach(d => {
+        const status = s.dates[d] || "";
+        if (status === "Present") {
+          present++;
+          consecutiveAbsences = 0;
+        } else if (status === "Absent") {
+          absent++;
+          consecutiveAbsences++;
+          maxConsecutiveAbsences = Math.max(maxConsecutiveAbsences, consecutiveAbsences);
+        }
+      });
+
+      const total = present + absent;
+      const pct = total ? Math.round((present / total) * 100) : 0;
+
+      if (maxConsecutiveAbsences >= 2 || pct < 60 || present === 0) {
+        risks.push({
+          name: s.name,
+          program: s.program,
+          pct,
+          absent,
+          maxConsecutiveAbsences,
+          flag: present === 0 ? "Never attended" :
+                maxConsecutiveAbsences >= 2 ? "Consecutive absences" :
+                "Low attendance"
+        });
+      }
+    });
+
+    riskList.innerHTML = risks.length
+      ? `<table>
+          <thead><tr><th>Student</th><th>Program</th><th>Attendance %</th><th>Total Absences</th><th>Max Consecutive Absences</th><th>Flag</th></tr></thead>
+          <tbody>
+            ${risks.map(r => `
+              <tr>
+                <td>${r.name}</td>
+                <td>${r.program}</td>
+                <td>${r.pct}%</td>
+                <td>${r.absent}</td>
+                <td>${r.maxConsecutiveAbsences}</td>
+                <td>${r.flag}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>`
+      : "No risk flags yet.";
+
+    matrix.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Program</th>
+            ${dates.map(d => `<th>${d}</th>`).join("")}
+            <th>Present</th>
+            <th>Absent</th>
+            <th>%</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${Object.values(students).map(s => {
+            let p = 0;
+            let a = 0;
+            const cells = dates.map(d => {
+              const status = s.dates[d] || "";
+              if (status === "Present") p++;
+              if (status === "Absent") a++;
+              const cls = status === "Present" ? "present" : status === "Absent" ? "absent" : "";
+              return `<td class="${cls}">${status === "Present" ? "P" : status === "Absent" ? "A" : ""}</td>`;
+            }).join("");
+            const total = p + a;
+            const pct = total ? Math.round((p / total) * 100) : 0;
+            const riskClass = pct < 60 ? "risk" : "";
+            return `<tr class="${riskClass}">
+              <td>${s.name}</td>
+              <td>${s.program}</td>
+              ${cells}
+              <td>${p}</td>
+              <td>${a}</td>
+              <td>${pct}%</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  buildBtn.onclick = () => {
+    allRows = parseRows(rawInput.value);
+    buildProgramOptions(allRows);
+    buildReport();
+  };
+
+  programFilter.onchange = buildReport;
+</script>
+</body>
+</html>
+
