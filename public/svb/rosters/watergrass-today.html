@@ -1455,6 +1455,10 @@ function updateCounter() {
   const emailTo = "nwalton@svbtennisfoundation.org";
   const emailCc = "kevin@svbtennisfoundation.org,classroom.connector@gmail.com";
 
+  const lessonNumber = window.SVB_PROGRAM_INFO?.session || 12;
+
+
+
   const emailSubject = `Watergrass Attendance Report - Session ${session} - ${date_iso}`;
 
   const emailBody = `Watergrass Attendance Report
@@ -1715,6 +1719,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
     </script>
   </body>
 </html>
+
 
 
 
