@@ -412,7 +412,7 @@
             Woodland Elementary â€” Today
             <span style="opacity: 0.85">[woodland]</span>
           </h1>
-          <div class="pill" id="dateInfo">Loadingâ€¦</div>
+          <div class="pill" id="dateInfo">Loading...</div>
         </div>
         <div class="row">
           <input id="date" type="date" />
@@ -1173,7 +1173,7 @@
         try {
           const pin = getPin();
           if (!pin) { showPinOverlay(); return; }
-          dateInfoEl.textContent = "Loadingâ€¦";
+          dateInfoEl.textContent = "Loading...";
           const r1 = await loadRoster(pin);
           if (!r1.ok) {
             dateInfoEl.textContent = "Roster load failed: " + (r1.error || "unknown");
@@ -1206,6 +1206,7 @@
     </script>
   </body>
 </html>
+
 
 
 

@@ -1117,7 +1117,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
           return;
         }
 
-        counterEl.textContent = "Loadingâ€¦";
+        counterEl.textContent = "Loading...";
         const r1 = await loadRoster(pin);
         if (!r1.ok) {
           counterEl.textContent =
@@ -1149,6 +1149,9 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
     </script>
   </body>
 </html>
+
+
+
 
 
 

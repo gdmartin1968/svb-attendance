@@ -577,7 +577,7 @@
           <h1>
             Watergrass - Today
           </h1>
-          <div class="pill" id="dateInfo">Loadingâ€¦</div>
+          <div class="pill" id="dateInfo">Loading...</div>
         </div>
         <div class="row">
           <input id="date" type="date" />
@@ -1673,7 +1673,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
             showPinOverlay();
             return;
           }
-          dateInfoEl.textContent = "Loadingâ€¦";
+          dateInfoEl.textContent = "Loading...";
           coachStatus = loadCoachStatus();
 
           const r1 = await loadRoster(pin);
@@ -1725,4 +1725,5 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
     </script>
   </body>
 </html>
+
 

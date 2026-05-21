@@ -528,7 +528,7 @@
       <div class="topbar">
         <div>
           <h1>Stewart Tennis - Today</h1>
-          <div class="pill" id="dateInfo">Loadingâ€¦</div>
+          <div class="pill" id="dateInfo">Loading...</div>
         </div>
         <div class="row">
           <input id="date" type="date" />
@@ -1407,11 +1407,11 @@ function updateCounter() {
   const emailTo = "nwalton@svbtennisfoundation.org";
   const emailCc = "kevin@svbtennisfoundation.org,classroom.connector@gmail.com";
 
-  const emailSubject = `Stewart Elementary Attendance Report - Lesson ${lessonNumber} - ${date_iso}`;
+  const emailSubject = `Stewart Elementary Attendance Report - Session ${lessonNumber} - ${date_iso}`;
 
   const emailBody = `Stewart Elementary Attendance Report
 Date: ${date_iso}
-Lesson Number: ${lessonNumber}
+Session Number: ${lessonNumber}
 
 Students Present: ${inNow} of ${list.length}
 Teacher Assistants Present: ${teacherAssistantsPresent.length}
@@ -1606,7 +1606,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
             showPinOverlay();
             return;
           }
-          dateInfoEl.textContent = "Loadingâ€¦";
+          dateInfoEl.textContent = "Loading...";
           const r1 = await loadRoster(pin);
           if (!r1.ok) {
             dateInfoEl.textContent =
@@ -1645,6 +1645,10 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
     </script>
   </body>
 </html>
+
+
+
+
 
 
 
