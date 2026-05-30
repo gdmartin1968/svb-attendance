@@ -2177,6 +2177,32 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
           window.SVB_PROGRAM_INFO?.totalSessions || 16,
         );
 
+        const generatedSchedule = Array.isArray(
+          window.SVB_PROGRAM_GENERATED_SCHEDULE,
+        )
+          ? window.SVB_PROGRAM_GENERATED_SCHEDULE.filter(
+              (item) => !item.skipped && item.session,
+            )
+          : [];
+
+        if (generatedSchedule.length) {
+          return Array.from({ length: totalSessions }, (_, index) => {
+            const number = index + 1;
+            const scheduled = generatedSchedule.find(
+              (item) => Number(item.session) === number,
+            );
+
+            return {
+              session_number: String(number),
+              date: scheduled?.date || "",
+            };
+          });
+        }
+
+        /*
+          Fallback for a page that does not yet expose a generated schedule:
+          build session dates from any known finalized snapshot date.
+        */
         const knownDates = {};
 
         attendanceHistory.sessions.forEach((session) => {
@@ -2218,7 +2244,6 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
           };
         });
       }
-
       function setSeasonTableMessage(message) {
         seasonTableMessage.textContent = message || "";
         seasonTableMessage.classList.toggle("visible", !!message);
