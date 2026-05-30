@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -209,11 +209,11 @@
       }
       .counterBig {
         margin-top: 10px;
-        padding: 24px 28px;
+        padding: 12px 18px;
         background: linear-gradient(135deg, #1e8449 0%, #145a32 100%);
-        border: 4px solid #2ecc71;
-        border-radius: 18px;
-        font-size: 32px;
+        border: 3px solid #2ecc71;
+        border-radius: 14px;
+        font-size: 22px;
         font-weight: 900;
         text-align: center;
         color: #fff;
@@ -224,10 +224,10 @@
         letter-spacing: 0.02em;
       }
       .counterBig .nums {
-        font-size: 72px;
+        font-size: 42px;
         display: block;
         line-height: 1;
-        margin-bottom: 8px;
+        margin-bottom: 2px;
         text-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
       }
       .pill {
@@ -408,7 +408,7 @@
         font-size: 14px;
         font-weight: 800;
         color: var(--muted);
-        margin-bottom: 8px;
+        margin-bottom: 2px;
         letter-spacing: 0.04em;
         text-transform: uppercase;
       }
@@ -458,7 +458,7 @@
         font-size: 14px;
         font-weight: 800;
         color: var(--muted);
-        margin-bottom: 8px;
+        margin-bottom: 2px;
         letter-spacing: 0.04em;
         text-transform: uppercase;
       }
@@ -517,7 +517,7 @@
         background: #0f2234;
         color: var(--ink);
         border: 1px solid var(--border);
-        border-radius: 18px;
+        border-radius: 14px;
         padding: 16px 16px 14px;
         box-shadow: 0 22px 50px rgba(0, 0, 0, 0.6);
       }
@@ -564,6 +564,39 @@
         max-width: 1400px;
         margin: 0 auto;
       }
+    
+      /* COUNTER ONLY STICKY PATCH */
+      header {
+        position: static !important;
+      }
+      .stickyCounterShell {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        padding: 6px 12px;
+        background: rgba(7, 17, 27, 0.94);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border);
+      }
+      .stickyCounterShell .counterBig {
+        margin: 0 !important;
+        padding: 5px 12px !important;
+        min-height: 42px !important;
+        border-width: 2px !important;
+        border-radius: 12px !important;
+        font-size: 16px !important;
+        line-height: 1 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+      }
+      .stickyCounterShell .counterBig .nums {
+        display: inline-block !important;
+        font-size: 30px !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+      }
     </style>
   </head>
   <body>
@@ -585,10 +618,6 @@
       </div>
 
       <div id="svbProgramInfoMount"></div>
-
-      <div class="counterBig" id="counterTop">
-        <span class="nums" id="counterTopNums">--</span> in attendance now
-      </div>
 
       <div class="sortRow">
         <span>Sort by:</span>
@@ -645,6 +674,12 @@
 
       <div class="warn" id="cancelBanner"></div>
     </header>
+
+    <div class="stickyCounterShell">
+      <div class="counterBig" id="counterTop">
+        <span class="nums" id="counterTopNums">--</span> in attendance now
+      </div>
+    </div>
 
     <main>
       <div class="grid" id="grid"></div>
@@ -1654,7 +1689,6 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
       }
 
       window.SVB_PROGRAM_INFO_UPDATED = updateCounter;
-
       refreshBtn.onclick = refreshAll;
       dateEl.onchange = () => {
         coachStatus = loadCoachStatus();
@@ -1673,7 +1707,3 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
     </script>
   </body>
 </html>
-
-
-
-

@@ -369,6 +369,39 @@
         font-weight: 900 !important;
         background: linear-gradient(135deg, #8e44ad, #5b2c6f) !important;
       }
+    
+      /* COUNTER ONLY STICKY PATCH */
+      header {
+        position: static !important;
+      }
+      .stickyCounterShell {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        padding: 6px 12px;
+        background: rgba(7, 17, 27, 0.94);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border);
+      }
+      .stickyCounterShell .counterBig {
+        margin: 0 !important;
+        padding: 5px 12px !important;
+        min-height: 42px !important;
+        border-width: 2px !important;
+        border-radius: 12px !important;
+        font-size: 16px !important;
+        line-height: 1 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+      }
+      .stickyCounterShell .counterBig .nums {
+        display: inline-block !important;
+        font-size: 30px !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+      }
     </style>
   </head>
   <body>
@@ -377,9 +410,6 @@
         <div>
           <h1>Ambassadors — Today</h1>
           <div class="pill" id="counter">Loading…</div>
-        </div>
-        <div class="counterBig" id="counterTop">
-          <span class="nums" id="counterTopNums">--</span> in attendance now
         </div>
         <div class="row">
           <input id="date" type="date" />
@@ -406,6 +436,12 @@
       </div>
       <div class="warn" id="cancelBanner"></div>
     </header>
+
+    <div class="stickyCounterShell">
+      <div class="counterBig" id="counterTop">
+        <span class="nums" id="counterTopNums">--</span> in attendance now
+      </div>
+    </div>
 
     <main>
       <div class="grid" id="grid"></div>
