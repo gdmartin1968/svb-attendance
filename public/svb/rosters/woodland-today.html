@@ -761,6 +761,13 @@
         <button class="sortBtn" id="selectAll" style="background: linear-gradient(135deg, #27ae60, #1e8449);">Select All</button>
         <button class="sortBtn" id="deselectAll" style="background: linear-gradient(135deg, #c0392b, #922b21);">Deselect All</button>
         <span style="margin-left: 16px;">|</span>
+        <button
+          id="finalizeAttendance"
+          class="sortBtn"
+          style="border: none; cursor: pointer; color: #fff; font-weight: 900; background: linear-gradient(135deg, #8e44ad, #5b2c6f);"
+        >
+          Finalize Attendance
+        </button>
         <button id="emailReport" class="sortBtn" style="border: none; cursor: pointer; color: #fff;">Email Report</button>
       </div>
       <div class="modeBar">
@@ -796,7 +803,8 @@
         </div>
         <p class="seasonTableHint">
           Provisional August 2026 schedule preview. Official attendance
-          history will appear here once future sessions are finalized.
+          history will appear here after selecting a session date, taking
+          attendance, and choosing Finalize Attendance.
         </p>
         <div class="seasonTableMessage" id="seasonTableMessage"></div>
         <div class="seasonTableWrap">
@@ -925,6 +933,7 @@
       const selectAllBtn = el("selectAll");
       const deselectAllBtn = el("deselectAll");
       const emailReportLink = el("emailReport");
+      const finalizeAttendanceBtn = el("finalizeAttendance");
 
       const modeAttendanceBtn = el("modeAttendance");
       const modeGroupsBtn = el("modeGroups");
@@ -1439,6 +1448,95 @@
         const img = new Image();
         img.src = url;
       }
+
+      /* ====== Official finalized attendance snapshot ====== */
+      function getSelectedScheduledSession() {
+        const schedule = Array.isArray(window.SVB_PROGRAM_GENERATED_SCHEDULE)
+          ? window.SVB_PROGRAM_GENERATED_SCHEDULE
+          : [];
+
+        return schedule.find(
+          (item) => !item.skipped && item.date === dateEl.value,
+        ) || null;
+      }
+
+      function saveAttendanceSnapshot() {
+        const pin = getPin();
+
+        if (!pin) {
+          showPinOverlay();
+          return;
+        }
+
+        if (!roster.length) {
+          alert("Roster empty. Nothing to finalize.");
+          return;
+        }
+
+        const scheduledSession = getSelectedScheduledSession();
+
+        if (!scheduledSession || !scheduledSession.session) {
+          alert(
+            "Please select one of this program's scheduled session dates before finalizing attendance.",
+          );
+          return;
+        }
+
+        const programName =
+          window.SVB_PROGRAM_INFO?.programName || ROSTER_ID;
+
+        const presentCount = roster.filter((p) => {
+          return (statusMap[p.participant_id]?.status || "none") === "in";
+        }).length;
+
+        const absentCount = roster.length - presentCount;
+
+        const confirmed = confirm(
+          `Finalize ${programName} attendance?\n\n` +
+          `Session: ${scheduledSession.session} of ${window.SVB_PROGRAM_INFO?.totalSessions || 16}\n` +
+          `Date: ${dateEl.value}\n` +
+          `Present: ${presentCount}\n` +
+          `Absent: ${absentCount}\n\n` +
+          `This will write the official season attendance record.`
+        );
+
+        if (!confirmed) return;
+
+        roster.forEach((p) => {
+          const st = statusMap[p.participant_id]?.status || "none";
+          const finalStatus = st === "in" ? "Present" : "Absent";
+
+          const snapshotUrl =
+            SCRIPT_URL +
+            "?" +
+            qs({
+              action: "attendance_snapshot",
+              pin,
+              date_iso: dateEl.value,
+              roster_id: ROSTER_ID,
+              program_name: programName,
+              session_number: String(scheduledSession.session),
+              participant_id: p.participant_id || "",
+              student_name: p.display_name || p.participant_id || "",
+              final_status: finalStatus,
+              coach_names: "",
+              assistant_names: "",
+              finalized_by: "coach",
+              source: "svb-roster-finalized",
+            });
+
+          const img = new Image();
+          img.src = snapshotUrl;
+        });
+
+        alert("Attendance snapshot finalized and sent to Google Sheets.");
+
+        if (currentMode === "season") {
+          setTimeout(refreshAll, 2500);
+        }
+      }
+
+      finalizeAttendanceBtn.onclick = saveAttendanceSnapshot;
 
       /* ====== UI ====== */
       function updateCounter() {
