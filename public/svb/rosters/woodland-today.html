@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>Woodland Elementary â€” Today</title>
+    <title>Woodland Elementary - Today</title>
     <style>
       :root {
         --bg: #07111b;
@@ -442,8 +442,7 @@
       <div class="topbar">
         <div>
           <h1>
-            Woodland Elementary â€” Today
-            <span style="opacity: 0.85">[woodland]</span>
+            Woodland Elementary - Today
           </h1>
           <div class="pill" id="dateInfo">Loading...</div>
         </div>
@@ -543,7 +542,7 @@
         },
         {
           participant_id: "placeholder_3",
-          display_name: "in Google Sheet â†’ rosters",
+          display_name: "in Google Sheet -> rosters",
           photo_url: "",
           grade: "",
         },
@@ -1024,7 +1023,7 @@
           }
         });
         const date_iso = dateEl.value;
-        dateInfoEl.textContent = `Date: ${date_iso}  â€¢  ${TZ_LABEL}  â€¢  Total roster: ${list.length}`;
+        dateInfoEl.textContent = `Date: ${date_iso}  -  ${TZ_LABEL}  -  Total roster: ${list.length}`;
         counterTopNums.textContent = inNow;
         
         // Update email report link
@@ -1084,7 +1083,7 @@
 
           const gradeEl = document.createElement("div");
           gradeEl.className = "gradeOverlay";
-          gradeEl.textContent = grade ? "Gr " + grade : "Gr â€”";
+          gradeEl.textContent = grade ? "Gr " + grade : "Gr -";
           photo.appendChild(gradeEl);
           
           // Level badge
