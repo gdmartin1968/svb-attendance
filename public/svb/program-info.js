@@ -252,6 +252,21 @@
         totalSessions: 16,
       },
 
+      weschapel: {
+        programName: "Wesley Chapel Elementary",
+        startDate: "2026-08-10",
+        meetingDays: [1, 3],
+        time: "Time TBD",
+        totalSessions: 16,
+      },
+
+      woodland: {
+        programName: "Woodland Elementary",
+        startDate: "2026-08-11",
+        meetingDays: [2, 4],
+        time: "Time TBD",
+        totalSessions: 16,
+      },
       westzephyrhills: {
         programName: "West Zephyrhills Elementary Tennis",
         startDate: "2026-04-14",

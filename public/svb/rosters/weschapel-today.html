@@ -338,6 +338,302 @@
         color: #666;
       }
 
+      .seasonTableSection {
+        display: none;
+        margin-top: 2px;
+      }
+      .seasonTableSection.visible {
+        display: block;
+      }
+      .seasonTableToolbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+      .seasonTableTitle {
+        font-size: 16px;
+        font-weight: 900;
+        color: #fff;
+      }
+      .seasonTableHint {
+        margin: 0 0 10px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+      .seasonReloadBtn {
+        padding: 7px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--ink);
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .seasonTableMessage {
+        display: none;
+        padding: 12px;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.05);
+        font-size: 13px;
+      }
+      .seasonTableMessage.visible {
+        display: block;
+      }
+      .seasonTableWrap {
+        overflow-x: auto;
+        overflow-y: visible;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .seasonTable {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: max-content;
+        min-width: 100%;
+        color: var(--ink);
+        font-size: 13px;
+      }
+      .seasonTable th,
+      .seasonTable td {
+        padding: 9px 8px;
+        text-align: center;
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        min-width: 58px;
+        background: rgba(7, 17, 27, 0.98);
+      }
+      .seasonTable thead th {
+        position: sticky;
+        top: 56px;
+        z-index: 4;
+        background: #112437;
+        color: #fff;
+        font-weight: 900;
+      }
+      .seasonTable th.studentCol,
+      .seasonTable td.studentCol {
+        position: sticky;
+        left: 0;
+        z-index: 3;
+        min-width: 175px;
+        max-width: 220px;
+        text-align: left;
+        font-weight: 800;
+        background: #102131;
+      }
+      .seasonTable thead th.studentCol {
+        z-index: 6;
+        background: #163047;
+      }
+      .seasonTable th.totalCol,
+      .seasonTable td.totalCol {
+        min-width: 62px;
+        font-weight: 800;
+      }
+      .seasonHeaderSession {
+        display: block;
+        font-size: 12px;
+        font-weight: 900;
+      }
+      .seasonHeaderDate {
+        display: block;
+        margin-top: 2px;
+        font-size: 10px;
+        font-weight: 700;
+        color: #a8bfd7;
+        white-space: nowrap;
+      }
+      .seasonStudentGrade {
+        display: block;
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .seasonMark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 27px;
+        height: 27px;
+        border-radius: 999px;
+        font-size: 18px;
+        font-weight: 900;
+      }
+      .seasonMark.present {
+        color: #fff;
+        background: #27ae60;
+      }
+      .seasonMark.absent {
+        color: #fff;
+        background: #c0392b;
+      }
+      .seasonMark.none {
+        color: #8494a8;
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .seasonPresentTotal {
+        color: #2ecc71;
+      }
+      .seasonAbsentTotal {
+        color: #ff6b62;
+      }
+      /* SEASON TABLE LIGHT WORKSPACE PATCH */
+      body.seasonMode {
+        background: #ffffff;
+      }
+      body.seasonMode main {
+        max-width: none;
+        background: #ffffff;
+        color: #1d2731;
+      }
+      body.seasonMode .seasonTableSection.visible {
+        background: #ffffff;
+        color: #1d2731;
+        padding: 12px;
+        border-radius: 12px;
+      }
+      body.seasonMode .seasonTableTitle {
+        color: #1d2731;
+      }
+      body.seasonMode .seasonTableHint {
+        color: #566474;
+      }
+      body.seasonMode .seasonReloadBtn {
+        background: #f4f7f0;
+        border-color: #cad8bb;
+        color: #24411e;
+      }
+      body.seasonMode .seasonTableWrap {
+        border: 1px solid #c6d9af;
+        background: #ffffff;
+        border-radius: 10px;
+      }
+      body.seasonMode .seasonTable th,
+      body.seasonMode .seasonTable td {
+        color: #1d2731;
+        border-right: 1px solid #d5dfc8;
+        border-bottom: 1px solid #d5dfc8;
+      }
+      body.seasonMode .seasonTable thead th {
+        top: 56px;
+        background: #70ad26;
+        color: #ffffff;
+      }
+      body.seasonMode .seasonTable thead th.studentCol {
+        background: #5f971d;
+        color: #ffffff;
+      }
+
+      /* SEASON TABLE WEEKDAY HEADER COLORS PATCH */
+      body.seasonMode .seasonTable thead th.sessionDayA {
+        background: #70ad26;
+      }
+      body.seasonMode .seasonTable thead th.sessionDayB {
+        background: #3f8e44;
+      }
+      body.seasonMode .seasonTable thead th.sessionDayUnknown {
+        background: #60764a;
+      }
+      body.seasonMode .seasonBottomClearance td {
+        height: 126px;
+        padding: 0;
+        border: none;
+        background: #ffffff !important;
+      }
+      body.seasonMode .seasonTableSection:not(.hasHorizontalScroll) .seasonBottomClearance td {
+        height: 72px;
+      }
+      body.seasonMode .seasonHeaderDate {
+        color: #eff8e5;
+      }
+      body.seasonMode .seasonTable tbody tr:nth-child(odd) td {
+        background: #ffffff;
+      }
+      body.seasonMode .seasonTable tbody tr:nth-child(even) td {
+        background: #eef7df;
+      }
+      body.seasonMode .seasonTable tbody tr:nth-child(odd) td.studentCol {
+        background: #ffffff;
+      }
+      body.seasonMode .seasonTable tbody tr:nth-child(even) td.studentCol {
+        background: #e4f2cc;
+      }
+      body.seasonMode .seasonTable td.studentCol {
+        min-width: 225px;
+        max-width: 260px;
+        white-space: nowrap;
+        color: #17212b;
+      }
+      body.seasonMode .seasonTable tfoot td {
+        position: sticky;
+        bottom: 0;
+        z-index: 5;
+        background: #d9edb8;
+        color: #17212b;
+        border-top: 2px solid #70ad26;
+        font-weight: 900;
+      }
+      body.seasonMode .seasonTableSection.hasHorizontalScroll .seasonTable tfoot td {
+        bottom: 62px;
+      }
+      body.seasonMode .seasonTable tfoot td.studentCol {
+        z-index: 7;
+        background: #cae7a0;
+      }
+      .seasonFooterCounts {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        align-items: center;
+        font-size: 12px;
+        line-height: 1.15;
+      }
+      .seasonFooterPresent {
+        color: #1e8449;
+      }
+      .seasonFooterAbsent {
+        color: #b83226;
+      }
+      .seasonScrollControls {
+        display: none;
+      }
+      .seasonScrollControls.visible {
+        position: sticky;
+        bottom: 8px;
+        z-index: 12;
+        display: flex;
+        justify-content: center;
+        gap: 14px;
+        margin-top: 10px;
+        padding: 8px;
+        pointer-events: none;
+      }
+      .seasonScrollBtn {
+        pointer-events: auto;
+        min-width: 74px;
+        padding: 10px 18px;
+        border-radius: 999px;
+        border: 1px solid #8daf5e;
+        background: #ffffff;
+        color: #3e6712;
+        font-size: 23px;
+        font-weight: 900;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.18);
+      }
+      .seasonScrollBtn:disabled {
+        opacity: 0.3;
+        cursor: default;
+      }
       .overlay {
         position: fixed;
         inset: 0;
@@ -452,6 +748,9 @@
           <a class="smallLink" href="/svb/rosters/index.html">Menu</a>
         </div>
       </div>
+
+      <div id="svbProgramInfoMount"></div>
+
       <div class="sortRow">
         <span>Sort by:</span>
         <button class="sortBtn active" id="sortFirst">First Name</button>
@@ -467,6 +766,7 @@
       <div class="modeBar">
         <button class="modeBtn active" id="modeAttendance">Attendance</button>
         <button class="modeBtn" id="modeGroups">Groups</button>
+        <button class="modeBtn" id="modeSeason">Season Table</button>
       </div>
       <div class="colorBar" id="colorBar">
         <span class="colorChoice green" data-color="green">GREEN</span>
@@ -486,7 +786,48 @@
 
     <main>
       <div class="grid" id="grid"></div>
+
+      <section class="seasonTableSection" id="seasonTableSection">
+        <div class="seasonTableToolbar">
+          <div class="seasonTableTitle">Season Attendance Table</div>
+          <button class="seasonReloadBtn" id="refreshSeasonTable">
+            Reload History
+          </button>
+        </div>
+        <p class="seasonTableHint">
+          Provisional August 2026 schedule preview. Official attendance
+          history will appear here once future sessions are finalized.
+        </p>
+        <div class="seasonTableMessage" id="seasonTableMessage"></div>
+        <div class="seasonTableWrap">
+          <table class="seasonTable">
+            <thead id="seasonTableHead"></thead>
+            <tbody id="seasonTableBody"></tbody>
+            <tfoot id="seasonTableFoot"></tfoot>
+          </table>
+        </div>
+        <div class="seasonScrollControls" id="seasonScrollControls">
+          <button
+            class="seasonScrollBtn"
+            id="seasonScrollLeft"
+            aria-label="Scroll to earlier sessions"
+            title="Earlier sessions"
+          >
+            ←
+          </button>
+          <button
+            class="seasonScrollBtn"
+            id="seasonScrollRight"
+            aria-label="Scroll to later sessions"
+            title="Later sessions"
+          >
+            →
+          </button>
+        </div>
+      </section>
+
     </main>
+
 
 
     <div class="overlay" id="pinOverlay">
@@ -517,6 +858,20 @@
       </div>
     </div>
 
+    <script>
+      window.SVB_PROGRAM_INFO = {
+        programName: "Wesley Chapel Elementary",
+        rosterId: "weschapel",
+        session: 1,
+        totalSessions: 16,
+        ageGroup: "elementary",
+        meetingDays: ["Monday", "Wednesday"],
+        closedDates: [],
+        scheduleStatus: "Provisional August 2026 schedule preview",
+      };
+    </script>
+
+    <script src="/svb/program-info.js"></script>
     <script src="/svb/shared-report-actions.js"></script>
     <script>
       /* ====== CONFIG ====== */
@@ -588,8 +943,22 @@
 
       const modeAttendanceBtn = el("modeAttendance");
       const modeGroupsBtn = el("modeGroups");
+      const modeSeasonBtn = el("modeSeason");
       const colorBar = el("colorBar");
       const clearAllLevelsBtn = el("clearAllLevels");
+
+      const seasonTableSection = el("seasonTableSection");
+      const seasonTableHead = el("seasonTableHead");
+      const seasonTableBody = el("seasonTableBody");
+      const seasonTableFoot = el("seasonTableFoot");
+      const seasonTableMessage = el("seasonTableMessage");
+      const seasonTableWrap = document.querySelector(".seasonTableWrap");
+      const seasonScrollControls = el("seasonScrollControls");
+      const seasonScrollLeftBtn = el("seasonScrollLeft");
+      const seasonScrollRightBtn = el("seasonScrollRight");
+      const refreshSeasonTableBtn = el("refreshSeasonTable");
+      const assistantSection = document.querySelector(".assistantSection");
+      const coachSection = document.querySelector(".coachSection");
 
       let currentMode = "attendance";
       let selectedGroupColor = null;
@@ -625,21 +994,51 @@
       loadGroupColorsFromServer();
       const colorCycle = [null, "green", "orange", "red"];
 
+      function setRosterView(mode) {
+        const enteringSeason = mode === "season" && currentMode !== "season";
+
+        currentMode = mode;
+        document.body.classList.toggle("seasonMode", mode === "season");
+
+        if (enteringSeason) {
+          seasonTableWrap.scrollLeft = 0;
+        }
+
+        modeAttendanceBtn.classList.toggle("active", mode === "attendance");
+        modeGroupsBtn.classList.toggle("active", mode === "groups");
+        modeSeasonBtn.classList.toggle("active", mode === "season");
+
+        colorBar.classList.toggle("visible", mode === "groups");
+        grid.style.display = mode === "season" ? "none" : "grid";
+        if (assistantSection) assistantSection.style.display = mode === "season" ? "none" : "";
+        if (coachSection) coachSection.style.display = mode === "season" ? "none" : "";
+        seasonTableSection.classList.toggle("visible", mode === "season");
+
+        if (mode !== "groups") {
+          selectedGroupColor = null;
+          document
+            .querySelectorAll(".colorChoice")
+            .forEach((c) => c.classList.remove("selected"));
+        }
+      }
+
       modeAttendanceBtn.onclick = () => {
-        currentMode = "attendance";
-        modeAttendanceBtn.classList.add("active");
-        modeGroupsBtn.classList.remove("active");
-        colorBar.classList.remove("visible");
-        selectedGroupColor = null;
-        document.querySelectorAll(".colorChoice").forEach(c => c.classList.remove("selected"));
+        setRosterView("attendance");
         render();
       };
+
       modeGroupsBtn.onclick = () => {
-        currentMode = "groups";
-        modeGroupsBtn.classList.add("active");
-        modeAttendanceBtn.classList.remove("active");
-        colorBar.classList.add("visible");
+        setRosterView("groups");
         render();
+      };
+
+      modeSeasonBtn.onclick = () => {
+        setRosterView("season");
+        refreshAll();
+      };
+
+      refreshSeasonTableBtn.onclick = () => {
+        refreshAll();
       };
       document.querySelectorAll(".colorChoice").forEach(choice => {
         choice.onclick = () => {
@@ -768,6 +1167,10 @@
       let roster = [];
       let statusMap = {};
       let localChanges = {};
+      let attendanceHistory = {
+        sessions: [],
+        rows: [],
+      };
 
       /* ====== Sorting ====== */
       function parseGrade(g) {
@@ -961,6 +1364,35 @@
           });
         });
       }
+      function loadAttendanceHistory(pin) {
+        return new Promise((resolve) => {
+          const url =
+            SCRIPT_URL +
+            "?" +
+            qs({
+              action: "attendance_history",
+              pin,
+              roster_id: ROSTER_ID,
+            });
+
+          jsonp(url, "cb_history_" + Date.now(), (data) => {
+            if (!data.ok) {
+              resolve({
+                ok: false,
+                error: data.error || "attendance_history_failed",
+              });
+              return;
+            }
+
+            attendanceHistory = {
+              sessions: data.sessions || [],
+              rows: data.rows || [],
+            };
+
+            resolve({ ok: true });
+          });
+        });
+      }
       function loadStatus(pin) {
         return new Promise((resolve) => {
           const date_iso = dateEl.value;
@@ -1069,11 +1501,406 @@
       
 
 
+      function localIsoDate(date) {
+        if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+          return "";
+        }
+
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+
+        return `${year}-${month}-${day}`;
+      }
+
+      function parseHistoryDate(rawDate) {
+        const text = String(rawDate || "").trim();
+
+        if (!text) return null;
+
+        if (/^\d{4}-\d{2}-\d{2}/.test(text)) {
+          const parts = text.slice(0, 10).split("-").map(Number);
+          return new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+
+        const parsed = new Date(text);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+      }
+
+      function compactDateLabel(dateIso) {
+        if (!dateIso) return "—";
+
+        const parts = dateIso.split("-");
+        if (parts.length !== 3) return "—";
+
+        return `${Number(parts[1])}/${Number(parts[2])}`;
+      }
+
+      function seasonDayHeaderClass(dateIso) {
+        const parsedDate = parseHistoryDate(dateIso);
+        const scheduledDays = meetingDayNumbers();
+
+        if (!parsedDate || !scheduledDays.length) {
+          return "sessionDayUnknown";
+        }
+
+        if (parsedDate.getDay() === scheduledDays[0]) {
+          return "sessionDayA";
+        }
+
+        if (parsedDate.getDay() === scheduledDays[1]) {
+          return "sessionDayB";
+        }
+
+        return "sessionDayUnknown";
+      }
+
+      function meetingDayNumbers() {
+        const dayMap = {
+          Sunday: 0,
+          Monday: 1,
+          Tuesday: 2,
+          Wednesday: 3,
+          Thursday: 4,
+          Friday: 5,
+          Saturday: 6,
+        };
+
+        return (window.SVB_PROGRAM_INFO?.meetingDays || [])
+          .map((day) => dayMap[day])
+          .filter((day) => day !== undefined);
+      }
+
+      function isScheduledSessionDate(date) {
+        const validDays = meetingDayNumbers();
+        const closedDates = window.SVB_PROGRAM_INFO?.closedDates || [];
+        const iso = localIsoDate(date);
+
+        return (
+          validDays.includes(date.getDay()) &&
+          !closedDates.includes(iso)
+        );
+      }
+
+      function nextScheduledDate(date, direction) {
+        const candidate = new Date(date);
+
+        for (let i = 0; i < 370; i++) {
+          candidate.setDate(candidate.getDate() + direction);
+
+          if (isScheduledSessionDate(candidate)) {
+            return new Date(candidate);
+          }
+        }
+
+        return null;
+      }
+
+      function buildSeasonSessions() {
+        const totalSessions = Number(
+          window.SVB_PROGRAM_INFO?.totalSessions || 16,
+        );
+
+        const generatedSchedule = Array.isArray(
+          window.SVB_PROGRAM_GENERATED_SCHEDULE,
+        )
+          ? window.SVB_PROGRAM_GENERATED_SCHEDULE.filter(
+              (item) => !item.skipped && item.session,
+            )
+          : [];
+
+        if (generatedSchedule.length) {
+          return Array.from({ length: totalSessions }, (_, index) => {
+            const number = index + 1;
+            const scheduled = generatedSchedule.find(
+              (item) => Number(item.session) === number,
+            );
+
+            return {
+              session_number: String(number),
+              date: scheduled?.date || "",
+            };
+          });
+        }
+
+        /*
+          Fallback for a page that does not yet expose a generated schedule:
+          build session dates from any known finalized snapshot date.
+        */
+        const knownDates = {};
+
+        attendanceHistory.sessions.forEach((session) => {
+          const sessionNumber = Number(session.session_number);
+          const parsedDate = parseHistoryDate(session.date);
+
+          if (
+            Number.isFinite(sessionNumber) &&
+            sessionNumber >= 1 &&
+            sessionNumber <= totalSessions &&
+            parsedDate
+          ) {
+            knownDates[sessionNumber] = parsedDate;
+          }
+        });
+
+        const anchorSession = Object.keys(knownDates)
+          .map(Number)
+          .sort((a, b) => a - b)[0];
+
+        if (anchorSession) {
+          for (let n = anchorSession - 1; n >= 1; n--) {
+            const priorDate = nextScheduledDate(knownDates[n + 1], -1);
+            if (priorDate) knownDates[n] = priorDate;
+          }
+
+          for (let n = anchorSession + 1; n <= totalSessions; n++) {
+            const futureDate = nextScheduledDate(knownDates[n - 1], 1);
+            if (futureDate) knownDates[n] = futureDate;
+          }
+        }
+
+        return Array.from({ length: totalSessions }, (_, index) => {
+          const number = index + 1;
+
+          return {
+            session_number: String(number),
+            date: knownDates[number] ? localIsoDate(knownDates[number]) : "",
+          };
+        });
+      }
+      function setSeasonTableMessage(message) {
+        seasonTableMessage.textContent = message || "";
+        seasonTableMessage.classList.toggle("visible", !!message);
+      }
+
+      function updateSeasonScrollControls() {
+        const overflow =
+          seasonTableWrap.scrollWidth > seasonTableWrap.clientWidth + 2;
+
+        seasonScrollControls.classList.toggle("visible", overflow);
+        seasonTableSection.classList.toggle("hasHorizontalScroll", overflow);
+
+        if (!overflow) {
+          return;
+        }
+
+        const maxScroll =
+          seasonTableWrap.scrollWidth - seasonTableWrap.clientWidth;
+
+        seasonScrollLeftBtn.disabled = seasonTableWrap.scrollLeft <= 3;
+        seasonScrollRightBtn.disabled =
+          seasonTableWrap.scrollLeft >= maxScroll - 3;
+      }
+
+      seasonScrollLeftBtn.onclick = () => {
+        seasonTableWrap.scrollBy({
+          left: -Math.max(280, seasonTableWrap.clientWidth * 0.72),
+          behavior: "smooth",
+        });
+      };
+
+      seasonScrollRightBtn.onclick = () => {
+        seasonTableWrap.scrollBy({
+          left: Math.max(280, seasonTableWrap.clientWidth * 0.72),
+          behavior: "smooth",
+        });
+      };
+
+      seasonTableWrap.addEventListener("scroll", updateSeasonScrollControls);
+
+      window.addEventListener("resize", () => {
+        if (currentMode === "season") {
+          updateSeasonScrollControls();
+        }
+      });
+
+      function renderSeasonTable() {
+        seasonTableHead.innerHTML = "";
+        seasonTableBody.innerHTML = "";
+        seasonTableFoot.innerHTML = "";
+
+        const participants = roster.length ? sortRoster(roster) : [];
+        const sessions = buildSeasonSessions();
+
+        if (!participants.length) {
+          setSeasonTableMessage("No roster students are loaded for this program.");
+          seasonScrollControls.classList.remove("visible");
+          return;
+        }
+
+        setSeasonTableMessage("");
+
+        const resultMap = {};
+
+        attendanceHistory.rows.forEach((row) => {
+          const key =
+            String(row.student_id || "") +
+            "||" +
+            String(row.session_number || "");
+
+          resultMap[key] = String(row.final_status || "").toLowerCase();
+        });
+
+        const sessionPresentTotals = sessions.map(() => 0);
+        const sessionAbsentTotals = sessions.map(() => 0);
+
+        const headerRow = document.createElement("tr");
+
+        const studentHeader = document.createElement("th");
+        studentHeader.className = "studentCol";
+        studentHeader.textContent = "Student / Grade";
+        headerRow.appendChild(studentHeader);
+
+        sessions.forEach((session) => {
+          const th = document.createElement("th");
+          th.classList.add(seasonDayHeaderClass(session.date));
+
+          const sessionLabel = document.createElement("span");
+          sessionLabel.className = "seasonHeaderSession";
+          sessionLabel.textContent = "S" + session.session_number;
+
+          const dateLabel = document.createElement("span");
+          dateLabel.className = "seasonHeaderDate";
+          dateLabel.textContent = compactDateLabel(session.date);
+
+          th.append(sessionLabel, dateLabel);
+          headerRow.appendChild(th);
+        });
+
+        const presentHeader = document.createElement("th");
+        presentHeader.className = "totalCol";
+        presentHeader.textContent = "P";
+
+        const absentHeader = document.createElement("th");
+        absentHeader.className = "totalCol";
+        absentHeader.textContent = "A";
+
+        headerRow.append(presentHeader, absentHeader);
+        seasonTableHead.appendChild(headerRow);
+
+        let grandPresentTotal = 0;
+        let grandAbsentTotal = 0;
+
+        participants.forEach((participant) => {
+          const row = document.createElement("tr");
+          const studentId = participant.participant_id || "";
+          const studentName = participant.display_name || studentId;
+          const grade =
+            participant.grade ||
+            participant.Grade ||
+            participant.GRADE ||
+            participant.student_grade ||
+            "";
+
+          const nameCell = document.createElement("td");
+          nameCell.className = "studentCol";
+          nameCell.textContent =
+            studentName + (grade ? " - Gr " + grade : "");
+
+          row.appendChild(nameCell);
+
+          let presentCount = 0;
+          let absentCount = 0;
+
+          sessions.forEach((session, sessionIndex) => {
+            const cell = document.createElement("td");
+            const mark = document.createElement("span");
+            const key = studentId + "||" + session.session_number;
+            const status = resultMap[key] || "";
+
+            mark.className = "seasonMark";
+
+            if (status === "present") {
+              mark.classList.add("present");
+              mark.textContent = "✓";
+              presentCount++;
+              grandPresentTotal++;
+              sessionPresentTotals[sessionIndex]++;
+            } else if (status === "absent") {
+              mark.classList.add("absent");
+              mark.textContent = "✕";
+              absentCount++;
+              grandAbsentTotal++;
+              sessionAbsentTotals[sessionIndex]++;
+            } else {
+              mark.classList.add("none");
+              mark.textContent = "—";
+            }
+
+            cell.appendChild(mark);
+            row.appendChild(cell);
+          });
+
+          const presentCell = document.createElement("td");
+          presentCell.className = "totalCol seasonPresentTotal";
+          presentCell.textContent = String(presentCount);
+
+          const absentCell = document.createElement("td");
+          absentCell.className = "totalCol seasonAbsentTotal";
+          absentCell.textContent = String(absentCount);
+
+          row.append(presentCell, absentCell);
+          seasonTableBody.appendChild(row);
+        });
+
+        const clearanceRow = document.createElement("tr");
+        clearanceRow.className = "seasonBottomClearance";
+        clearanceRow.setAttribute("aria-hidden", "true");
+
+        const clearanceCell = document.createElement("td");
+        clearanceCell.colSpan = sessions.length + 3;
+        clearanceRow.appendChild(clearanceCell);
+        seasonTableBody.appendChild(clearanceRow);
+
+        const totalsRow = document.createElement("tr");
+
+        const totalsLabel = document.createElement("td");
+        totalsLabel.className = "studentCol";
+        totalsLabel.textContent = "SESSION TOTALS";
+        totalsRow.appendChild(totalsLabel);
+
+        sessions.forEach((session, index) => {
+          const cell = document.createElement("td");
+          const counts = document.createElement("div");
+          counts.className = "seasonFooterCounts";
+
+          const present = document.createElement("span");
+          present.className = "seasonFooterPresent";
+          present.textContent = "✓ " + sessionPresentTotals[index];
+
+          const absent = document.createElement("span");
+          absent.className = "seasonFooterAbsent";
+          absent.textContent = "✕ " + sessionAbsentTotals[index];
+
+          counts.append(present, absent);
+          cell.appendChild(counts);
+          totalsRow.appendChild(cell);
+        });
+
+        const grandPresentCell = document.createElement("td");
+        grandPresentCell.className = "totalCol seasonPresentTotal";
+        grandPresentCell.textContent = String(grandPresentTotal);
+
+        const grandAbsentCell = document.createElement("td");
+        grandAbsentCell.className = "totalCol seasonAbsentTotal";
+        grandAbsentCell.textContent = String(grandAbsentTotal);
+
+        totalsRow.append(grandPresentCell, grandAbsentCell);
+        seasonTableFoot.appendChild(totalsRow);
+
+        requestAnimationFrame(updateSeasonScrollControls);
+      }
+
       function render() {
         grid.innerHTML = "";
         const list = roster.length ? sortRoster(roster) : placeholderCards;
 
         updateCounter();
+
+        if (currentMode === "season") {
+          renderSeasonTable();
+          return;
+        }
 
         list.forEach((p) => {
           const pid = p.participant_id;
@@ -1236,6 +2063,21 @@
             console.log("Status load failed:", r2.error);
             return;
           }
+
+          if (currentMode === "season") {
+            setSeasonTableMessage("Loading finalized season history...");
+
+            const historyResult = await loadAttendanceHistory(pin);
+
+            if (!historyResult.ok) {
+              setSeasonTableMessage(
+                "Season history load failed: " +
+                (historyResult.error || "unknown"),
+              );
+              return;
+            }
+          }
+
           render();
         } catch (err) {
           dateInfoEl.textContent = "Error: " + err.message;
