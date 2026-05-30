@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   function injectStyles() {
     if (document.getElementById("svbProgramInfoStyles")) return;
 
@@ -252,7 +252,7 @@
         totalSessions: 16,
       },
 
-      west_zephyrhills: {
+      westzephyrhills: {
         programName: "West Zephyrhills Elementary Tennis",
         startDate: "2026-04-14",
         meetingDays: [2, 4],
