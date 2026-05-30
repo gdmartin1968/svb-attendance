@@ -46,11 +46,11 @@
       }
       .counterBig {
         margin-top: 10px;
-        padding: 24px 28px;
+        padding: 12px 18px;
         background: linear-gradient(135deg, #1e8449 0%, #145a32 100%);
-        border: 4px solid #2ecc71;
-        border-radius: 18px;
-        font-size: 32px;
+        border: 3px solid #2ecc71;
+        border-radius: 14px;
+        font-size: 22px;
         font-weight: 900;
         text-align: center;
         color: #fff;
@@ -59,10 +59,10 @@
         letter-spacing: 0.02em;
       }
       .counterBig .nums {
-        font-size: 72px;
+        font-size: 42px;
         display: block;
         line-height: 1;
-        margin-bottom: 8px;
+        margin-bottom: 2px;
         text-shadow: 0 4px 16px rgba(0,0,0,0.6);
       }
       .modeBar {
@@ -196,7 +196,7 @@
       .card {
         background: var(--card);
         color: var(--cardInk);
-        border-radius: 18px;
+        border-radius: 14px;
         overflow: hidden;
         border: 4px solid rgba(0, 0, 0, 0.08);
         box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
@@ -249,7 +249,7 @@
         background: #0f2234;
         color: var(--ink);
         border: 1px solid var(--border);
-        border-radius: 18px;
+        border-radius: 14px;
         padding: 16px 16px 14px;
         box-shadow: 0 22px 50px rgba(0, 0, 0, 0.6);
       }
@@ -291,6 +291,84 @@
         color: var(--muted);
         font-size: 12px;
       }
+    
+      /* COMPACT ATTENDANCE COUNTER SAFE PATCH */
+      .counterBig {
+        margin-top: 8px !important;
+        padding: 7px 14px !important;
+        border-width: 2px !important;
+        border-radius: 12px !important;
+        font-size: 17px !important;
+        line-height: 1.1 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 9px !important;
+        min-height: 42px !important;
+      }
+      .counterBig .nums {
+        display: inline-block !important;
+        font-size: 32px !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+      }
+
+      /* AMBASSADOR COACH CHIPS SAFE PATCH */
+      .coachSection {
+        margin-top: 18px;
+      }
+      .coachSectionTitle {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--muted);
+        margin-bottom: 8px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .coachRow {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+      }
+      .coachChip {
+        flex: 0 0 auto;
+        min-width: 130px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+      }
+      .coachChip.present {
+        background: linear-gradient(135deg, #27ae60, #1e8449);
+        border-color: #2ecc71;
+        box-shadow: 0 0 14px rgba(46, 204, 113, 0.45);
+      }
+      .coachDot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.35);
+      }
+      .coachChip.present .coachDot {
+        background: #fff;
+      }
+      .finalizeBtn {
+        border: none !important;
+        color: #fff !important;
+        font-weight: 900 !important;
+        background: linear-gradient(135deg, #8e44ad, #5b2c6f) !important;
+      }
     </style>
   </head>
   <body>
@@ -316,6 +394,7 @@
         <button class="modeBtn active" id="modeAttendance">Attendance</button>
         <button class="modeBtn" id="modeGroups">Groups</button>
         <span style="margin-left: 16px;">|</span>
+        <button id="finalizeAttendance" class="modeBtn finalizeBtn">Finalize Attendance</button>
         <button id="emailReport" style="background: none; border: none; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; padding: 0;">Email Report</button>
       </div>
       <div class="colorBar" id="colorBar">
@@ -330,6 +409,10 @@
 
     <main>
       <div class="grid" id="grid"></div>
+      <section class="coachSection">
+        <div class="coachSectionTitle">Coaches</div>
+        <div class="coachRow" id="coachRow"></div>
+      </section>
     </main>
 
     <div class="overlay" id="pinOverlay">
@@ -364,6 +447,7 @@
         "https://script.google.com/macros/s/AKfycbznvlI35ckcTD4jyLNhtokbPW58Ug4Xn5NRvbBL8VjvzUCorEg2VWPYjdUuPSFxEddt/exec";
       const ROSTER_ID = "ambassadors";
       const TZ_LABEL = "America/New_York";
+      const COACHES = ["Gordon", "Yusuf"];
 
       /* Optional: hardcode a few photos while you build the roster sheet photo_url column.
    Use participant_id keys from your "rosters" sheet. */
@@ -402,6 +486,7 @@
       /* ====== DOM ====== */
       const el = (id) => document.getElementById(id);
       const grid = el("grid");
+      const coachRow = el("coachRow");
       const dateEl = el("date");
       const refreshBtn = el("refresh");
       const counterEl = el("counter");
@@ -413,11 +498,31 @@
       const colorBar = el("colorBar");
       const clearAllLevelsBtn = el("clearAllLevels");
       const emailReportLink = el("emailReport");
+      const finalizeAttendanceBtn = el("finalizeAttendance");
 
       let currentMode = "attendance";
       let selectedGroupColor = null;
       const GROUP_KEY = "svb_groups_ambassadors";
       let groupColors = JSON.parse(localStorage.getItem(GROUP_KEY) || "{}");
+      function coachStorageKey() {
+        return "svb_coaches_ambassadors_" + dateEl.value;
+      }
+
+      function loadCoachStatus() {
+        return JSON.parse(localStorage.getItem(coachStorageKey()) || "{}");
+      }
+
+      function saveCoachStatus(map) {
+        localStorage.setItem(coachStorageKey(), JSON.stringify(map));
+      }
+
+      let coachStatus = {};
+
+      function toggleCoach(name) {
+        coachStatus[name] = !coachStatus[name];
+        saveCoachStatus(coachStatus);
+        renderCoaches();
+      }
       function saveGroupColor(pid, color) {
         if (color) { groupColors[pid] = color; } else { delete groupColors[pid]; }
         localStorage.setItem(GROUP_KEY, JSON.stringify(groupColors));
@@ -714,6 +819,55 @@
       }
 
       /* ====== UI ====== */
+      function renderCoaches() {
+        coachRow.innerHTML = "";
+        COACHES.forEach((name) => {
+          const chip = document.createElement("div");
+          chip.className = "coachChip" + (coachStatus[name] ? " present" : "");
+          chip.innerHTML = '<span class="coachDot"></span><span>' + name + '</span>';
+          chip.onclick = () => toggleCoach(name);
+          coachRow.appendChild(chip);
+        });
+      }
+
+      function saveAttendanceSnapshot() {
+        const pin = getPin();
+        if (!pin) {
+          showPinOverlay();
+          return;
+        }
+        if (!roster.length) {
+          alert("Roster empty. Nothing to finalize.");
+          return;
+        }
+
+        const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
+        const confirmed = confirm("Finalize attendance for Ambassadors on " + dateEl.value + "? This will save one official Present/Absent row per Ambassador.");
+        if (!confirmed) return;
+
+        roster.forEach((p) => {
+          const st = statusMap[p.participant_id]?.status || "none";
+          const finalStatus = st === "in" || st === "out" ? "Present" : "Absent";
+          const snapshotUrl = SCRIPT_URL + "?" + qs({
+            action: "attendance_snapshot",
+            pin,
+            date_iso: dateEl.value,
+            roster_id: ROSTER_ID,
+            program_name: "Ambassadors",
+            participant_id: p.participant_id || "",
+            student_name: p.display_name || p.participant_id || "",
+            final_status: finalStatus,
+            coach_names: coachesPresent.join(", "),
+            assistant_names: "",
+            finalized_by: "coach",
+            source: "svb-roster-finalized"
+          });
+          const img = new Image();
+          img.src = snapshotUrl;
+        });
+
+        alert("Ambassadors attendance snapshot finalized and sent to Google Sheets.");
+      }
       function updateCounter() {
         const list = roster.length ? roster : [];
         let inNow = 0;
@@ -750,10 +904,12 @@
           a.click();
           setTimeout(() => document.body.removeChild(a), 100);
         };
+        finalizeAttendanceBtn.onclick = saveAttendanceSnapshot;
       }
       
       function render() {
         grid.innerHTML = "";
+        coachStatus = loadCoachStatus();
         const list = roster.length ? roster : placeholderCards;
         
         updateCounter();
@@ -884,52 +1040,7 @@
 
           grid.appendChild(card);
         });
-        // ===== COACH ROW (BOTTOM) =====
-        const coachSection = document.createElement("div");
-        coachSection.style.gridColumn = "1 / -1"; // full width
-        coachSection.style.marginTop = "16px";
-
-        const coachTitle = document.createElement("div");
-        coachTitle.textContent = "Coaches";
-        coachTitle.style.fontSize = "14px";
-        coachTitle.style.fontWeight = "800";
-        coachTitle.style.marginBottom = "8px";
-        coachTitle.style.opacity = "0.8";
-
-        const coachRow = document.createElement("div");
-        coachRow.style.display = "flex";
-        coachRow.style.gap = "10px";
-        coachRow.style.flexWrap = "wrap";
-
-        // Coach list
-        const coaches = [
-          { name: "Gordon", id: "coach_gordon" },
-          { name: "Yusuf", id: "coach_yusuf" }
-        ];
-
-        coaches.forEach(c => {
-          const card = document.createElement("div");
-          card.className = "card";
-          card.style.maxWidth = "220px";
-
-          const photo = document.createElement("div");
-          photo.className = "photo";
-          photo.textContent = c.name.charAt(0);
-
-          const name = document.createElement("div");
-          name.className = "name";
-          name.textContent = c.name;
-
-          const status = document.createElement("div");
-          status.className = "status";
-          status.textContent = "Coach";
-
-          card.append(photo, name, status);
-          coachRow.appendChild(card);
-        });
-        coachSection.appendChild(coachTitle);
-        coachSection.appendChild(coachRow);
-        grid.appendChild(coachSection);
+        renderCoaches();
       }
 
       async function refreshAll() {
@@ -956,9 +1067,11 @@
         }
         render();
       }
-
       refreshBtn.onclick = refreshAll;
-      dateEl.onchange = refreshAll;
+      dateEl.onchange = () => {
+        coachStatus = loadCoachStatus();
+        refreshAll();
+      };
 
       if (getPin()) {
         pinOverlay.style.display = "none";
