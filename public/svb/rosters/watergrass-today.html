@@ -722,6 +722,72 @@
         font-weight: 900;
         letter-spacing: 0.04em;
       }
+      /* SEASON TABLE ARCHIVED STUDENTS TOGGLE PATCH */
+      .seasonArchivedOptionRow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 8px 0 10px;
+      }
+      .seasonArchiveToggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 11px;
+        border: 1px solid #cad8bb;
+        border-radius: 999px;
+        background: #f4f7f0;
+        color: #294321;
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+        user-select: none;
+      }
+      .seasonArchiveToggle input {
+        width: 17px;
+        height: 17px;
+        margin: 0;
+        accent-color: #5f971d;
+        cursor: pointer;
+      }
+      .seasonArchiveNotice {
+        display: none;
+        padding: 7px 10px;
+        border-radius: 9px;
+        border: 1px solid #e8c777;
+        background: #fff4d6;
+        color: #634800;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .seasonArchiveNotice.visible {
+        display: block;
+      }
+      body.seasonMode .seasonTable tbody tr.seasonArchivedRow td {
+        background: #fff7e7 !important;
+        color: #566474;
+        font-style: italic;
+      }
+      body.seasonMode .seasonTable tbody tr.seasonArchivedRow td.studentCol {
+        background: #fde9bd !important;
+      }
+      body.seasonMode .seasonTable tbody tr.seasonArchivedRow td.seasonCurrentColumn {
+        background: #f5dfa4 !important;
+      }
+      .seasonArchivedTag {
+        display: inline-block;
+        margin-left: 7px;
+        padding: 2px 5px;
+        border-radius: 999px;
+        background: #bf8707;
+        color: #ffffff;
+        font-size: 9px;
+        font-weight: 900;
+        font-style: normal;
+        letter-spacing: 0.04em;
+        vertical-align: middle;
+      }
       .seasonFooterCounts {
         display: flex;
         flex-direction: column;
@@ -1065,6 +1131,13 @@
           write the official session results.
         </p>
         <div class="seasonTableMessage" id="seasonTableMessage"></div>
+        <div class="seasonArchivedOptionRow">
+          <label class="seasonArchiveToggle">
+            <input type="checkbox" id="showArchivedSeasonStudents" />
+            <span>Show archived session students</span>
+          </label>
+          <div class="seasonArchiveNotice" id="seasonArchiveNotice"></div>
+        </div>
         <div class="seasonTableWrap">
           <table class="seasonTable">
             <thead id="seasonTableHead"></thead>
@@ -1222,10 +1295,13 @@
       const seasonScrollLeftBtn = el("seasonScrollLeft");
       const seasonScrollRightBtn = el("seasonScrollRight");
       const refreshSeasonTableBtn = el("refreshSeasonTable");
+      const showArchivedSeasonStudentsCheckbox = el("showArchivedSeasonStudents");
+      const seasonArchiveNotice = el("seasonArchiveNotice");
       const assistantSection = document.querySelector(".assistantSection");
       const coachSection = document.querySelector(".coachSection");
 
       let currentMode = "attendance";
+      let showArchivedSeasonStudents = false;
       let selectedGroupColor = null;
       const GROUP_KEY = "svb_groups_watergrass";
       let groupColors = JSON.parse(localStorage.getItem(GROUP_KEY) || "{}");
@@ -2325,14 +2401,83 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
           className: "open",
         };
       }
+      function getArchivedSeasonParticipants(activeParticipants) {
+        const activeIds = new Set(
+          activeParticipants.map((participant) => {
+            return String(participant.participant_id || "");
+          }),
+        );
+
+        const archivedById = new Map();
+
+        if (!Array.isArray(attendanceHistory.rows)) {
+          return [];
+        }
+
+        attendanceHistory.rows.forEach((row) => {
+          const studentId = String(row.student_id || "").trim();
+
+          if (!studentId || activeIds.has(studentId)) {
+            return;
+          }
+
+          if (!archivedById.has(studentId)) {
+            archivedById.set(studentId, {
+              participant_id: studentId,
+              display_name: row.student_name || studentId,
+              grade: "",
+              isArchivedSeasonStudent: true,
+            });
+          }
+        });
+
+        return Array.from(archivedById.values()).sort((a, b) => {
+          return String(a.display_name || "").localeCompare(
+            String(b.display_name || ""),
+          );
+        });
+      }
+
+      function updateSeasonArchiveNotice(archivedParticipants) {
+        const count = archivedParticipants.length;
+
+        seasonArchiveNotice.classList.toggle("visible", count > 0);
+
+        if (!count) {
+          seasonArchiveNotice.textContent = "";
+          return;
+        }
+
+        if (showArchivedSeasonStudents) {
+          seasonArchiveNotice.textContent =
+            `${count} archived student record${count === 1 ? "" : "s"} shown from finalized session history.`;
+        } else {
+          seasonArchiveNotice.textContent =
+            `${count} archived student record${count === 1 ? "" : "s"} hidden. Select "Show archived session students" to include historical rows and totals.`;
+        }
+      }
+
+      showArchivedSeasonStudentsCheckbox.addEventListener("change", () => {
+        showArchivedSeasonStudents =
+          !!showArchivedSeasonStudentsCheckbox.checked;
+
+        renderSeasonTable();
+      });
       function renderSeasonTable() {
         seasonTableHead.innerHTML = "";
         seasonTableBody.innerHTML = "";
         seasonTableFoot.innerHTML = "";
 
-        const participants = roster.length ? sortRoster(roster) : [];
+        const activeParticipants = roster.length ? sortRoster(roster) : [];
+        const archivedParticipants =
+          getArchivedSeasonParticipants(activeParticipants);
+        const participants = showArchivedSeasonStudents
+          ? [...activeParticipants, ...archivedParticipants]
+          : activeParticipants;
         const sessions = buildSeasonSessions();
         const currentSessionNumber = getCurrentSeasonSessionNumber(sessions);
+
+        updateSeasonArchiveNotice(archivedParticipants);
 
         if (!participants.length) {
           setSeasonTableMessage("No roster students are loaded for this program.");
@@ -2430,10 +2575,25 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
             participant.student_grade ||
             "";
 
+          if (participant.isArchivedSeasonStudent) {
+            row.classList.add("seasonArchivedRow");
+          }
+
           const nameCell = document.createElement("td");
           nameCell.className = "studentCol";
-          nameCell.textContent =
+
+          const studentLabel = document.createElement("span");
+          studentLabel.textContent =
             studentName + (grade ? " - Gr " + grade : "");
+
+          nameCell.appendChild(studentLabel);
+
+          if (participant.isArchivedSeasonStudent) {
+            const archivedTag = document.createElement("span");
+            archivedTag.className = "seasonArchivedTag";
+            archivedTag.textContent = "ARCHIVED";
+            nameCell.appendChild(archivedTag);
+          }
 
           row.appendChild(nameCell);
 
