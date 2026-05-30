@@ -414,9 +414,9 @@
       }
       .assistantRow {
         display: flex;
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
         gap: 10px;
-        overflow-x: auto;
+        overflow-x: visible;
         padding-bottom: 6px;
       }
       .assistantChip {
@@ -1413,6 +1413,68 @@
         });
       }
 
+      function saveAttendanceSnapshot() {
+        const pin = getPin();
+
+        if (!pin) {
+          showPinOverlay();
+          return;
+        }
+
+        if (!roster.length) {
+          alert("Roster empty. Nothing to finalize.");
+          return;
+        }
+
+        const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
+        const teacherAssistantsPresent = window.SVB_PROGRAM_ASSISTANTS_PRESENT || [];
+        const ambassadorAssistantsPresent = assistantRoster
+          .filter((p) => getAssistantStatus(p.participant_id) === "in")
+          .map((p) => p.display_name || p.participant_id);
+        const allAssistantsPresent = [
+          ...teacherAssistantsPresent,
+          ...ambassadorAssistantsPresent,
+        ];
+        const sessionNumber = String(window.SVB_PROGRAM_INFO?.session || "");
+        const programName = window.SVB_PROGRAM_INFO?.programName || "West Zephyrhills Elementary Tennis";
+
+        const confirmed = confirm(
+          `Finalize attendance for ${programName} on ${dateEl.value}?\n\nThis will save one official Present/Absent row per student.`
+        );
+
+        if (!confirmed) return;
+
+        roster.forEach((p) => {
+          const st = statusMap[p.participant_id]?.status || "none";
+          const finalStatus = st === "in" ? "Present" : "Absent";
+
+          const snapshotUrl =
+            SCRIPT_URL +
+            "?" +
+            qs({
+              action: "attendance_snapshot",
+              pin,
+              date_iso: dateEl.value,
+              roster_id: ROSTER_ID,
+              program_name: programName,
+              session_number: sessionNumber,
+              participant_id: p.participant_id || "",
+              student_name: p.display_name || p.participant_id || "",
+              final_status: finalStatus,
+              coach_names: coachesPresent.join(", "),
+              assistant_names: allAssistantsPresent.join(", "),
+              finalized_by: "coach",
+              source: "svb-roster-finalized",
+            });
+
+          const img = new Image();
+          img.src = snapshotUrl;
+        });
+
+        alert("Attendance snapshot finalized and sent to Google Sheets.");
+      }
+
+      finalizeAttendanceBtn.onclick = saveAttendanceSnapshot;
       function updateCounter() {
   const list = roster.length ? roster : [];
   let inNow = 0;

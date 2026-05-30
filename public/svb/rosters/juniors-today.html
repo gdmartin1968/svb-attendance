@@ -268,9 +268,9 @@
       }
       .assistantRow {
         display: flex;
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
         gap: 10px;
-        overflow-x: auto;
+        overflow-x: visible;
         padding-bottom: 6px;
       }
       .assistantChip {
@@ -1111,6 +1111,13 @@
 
   const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
   const teacherAssistantsPresent = window.SVB_PROGRAM_ASSISTANTS_PRESENT || [];
+  const ambassadorAssistantsPresent = assistantRoster
+    .filter((p) => getAssistantStatus(p.participant_id) === "in")
+    .map((p) => p.display_name || p.participant_id);
+  const allAssistantsPresent = [
+    ...teacherAssistantsPresent,
+    ...ambassadorAssistantsPresent,
+  ];
   const lessonNumber = window.SVB_PROGRAM_INFO?.session || "";
   const programName = window.SVB_PROGRAM_INFO?.programName || ROSTER_ID;
 
@@ -1138,7 +1145,7 @@
         student_name: p.display_name || p.participant_id || "",
         final_status: finalStatus,
         coach_names: coachesPresent.join(", "),
-        assistant_names: teacherAssistantsPresent.join(", "),
+        assistant_names: allAssistantsPresent.join(", "),
         finalized_by: "coach",
         source: "svb-roster-finalized",
       });
