@@ -657,6 +657,75 @@
         z-index: 7;
         background: #cae7a0;
       }
+      /* SEASON TABLE OPERATIONAL ENHANCEMENTS PATCH */
+      body.seasonMode .seasonTableWrap {
+        height: clamp(280px, calc(100vh - 245px), 720px);
+        overflow: auto;
+        overscroll-behavior: contain;
+      }
+      body.seasonMode .seasonTable thead th {
+        top: 0;
+        z-index: 10;
+      }
+      body.seasonMode .seasonTable thead th.studentCol {
+        z-index: 12;
+      }
+      body.seasonMode .seasonTable tfoot td {
+        bottom: 0;
+        z-index: 9;
+      }
+      body.seasonMode .seasonTableSection.hasHorizontalScroll .seasonTable tfoot td {
+        bottom: 0;
+      }
+      body.seasonMode .seasonTable tfoot td.studentCol {
+        z-index: 11;
+      }
+      .seasonHeaderStatus {
+        display: block;
+        margin-top: 5px;
+        padding: 2px 4px;
+        border-radius: 999px;
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+      }
+      .seasonHeaderStatus.open {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+      }
+      .seasonHeaderStatus.partial {
+        background: #ffe082;
+        color: #5d4300;
+      }
+      .seasonHeaderStatus.finalized {
+        background: #ffffff;
+        color: #246523;
+      }
+      body.seasonMode .seasonTable thead th.seasonCurrentColumn {
+        outline: 3px solid #ffd54f;
+        outline-offset: -3px;
+        box-shadow: inset 0 -4px 0 #ffd54f;
+      }
+      body.seasonMode .seasonTable tbody tr:nth-child(odd) td.seasonCurrentColumn {
+        background: #fff6ce !important;
+      }
+      body.seasonMode .seasonTable tbody tr:nth-child(even) td.seasonCurrentColumn {
+        background: #f4ebbf !important;
+      }
+      body.seasonMode .seasonTable tfoot td.seasonCurrentColumn {
+        background: #efd989;
+      }
+      .seasonCurrentBadge {
+        display: block;
+        margin-top: 4px;
+        color: #533900;
+        background: #ffd54f;
+        border-radius: 999px;
+        padding: 2px 4px;
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+      }
       .seasonFooterCounts {
         display: flex;
         flex-direction: column;
@@ -1944,6 +2013,15 @@
         });
       }
 
+      function getSelectedScheduledSessionForFinalize() {
+        const schedule = Array.isArray(window.SVB_PROGRAM_GENERATED_SCHEDULE)
+          ? window.SVB_PROGRAM_GENERATED_SCHEDULE
+          : [];
+
+        return schedule.find(
+          (item) => !item.skipped && item.date === dateEl.value,
+        ) || null;
+      }
       function saveAttendanceSnapshot() {
   const pin = getPin();
 
@@ -1966,14 +2044,40 @@
     ...teacherAssistantsPresent,
     ...ambassadorAssistantsPresent,
   ];
-  const sessionNumber = getCurrentSessionNumber();
+  const scheduledSession = getSelectedScheduledSessionForFinalize();
+
+  if (!scheduledSession || !scheduledSession.session) {
+    alert(
+      "Please select one of this program's scheduled session dates before finalizing attendance.",
+    );
+    return;
+  }
+
+  const sessionNumber = String(scheduledSession.session);
   const programName = window.SVB_PROGRAM_INFO?.programName || ROSTER_ID;
 
-  const confirmed = confirm(
-    `Finalize attendance for ${programName} on ${dateEl.value}?\n\nThis will save one official Present/Absent row per student.`
-  );
+        const presentCount = roster.filter((p) => {
+          return (statusMap[p.participant_id]?.status || "none") === "in";
+        }).length;
 
-  if (!confirmed) return;
+        const absentCount = roster.length - presentCount;
+
+        const staffSummaryLines = [
+          `Coaches: ${coachesPresent.length ? coachesPresent.join(", ") : "(none selected)"}`,
+          `Assistants: ${allAssistantsPresent.length ? allAssistantsPresent.join(", ") : "(none selected)"}`,
+        ];
+
+        const confirmed = confirm(
+          `Finalize ${programName} attendance?\n\n` +
+          `Session: ${sessionNumber} of ${window.SVB_PROGRAM_INFO?.totalSessions || 16}\n` +
+          `Date: ${dateEl.value}\n` +
+          `Present: ${presentCount}\n` +
+          `Absent: ${absentCount}\n` +
+          `${staffSummaryLines.join("\n")}\n\n` +
+          `This will write the official season attendance record.`
+        );
+
+        if (!confirmed) return;
 
   roster.forEach((p) => {
     const st = statusMap[p.participant_id]?.status || "none";
@@ -2290,6 +2394,58 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
         }
       });
 
+      function getCurrentSeasonSessionNumber(sessions) {
+        const selectedDate = String(dateEl.value || "");
+
+        const exactSession = sessions.find(
+          (session) => session.date && session.date === selectedDate,
+        );
+
+        if (exactSession) {
+          return String(exactSession.session_number);
+        }
+
+        const priorSessions = sessions.filter(
+          (session) => session.date && session.date <= selectedDate,
+        );
+
+        if (priorSessions.length) {
+          return String(
+            priorSessions[priorSessions.length - 1].session_number,
+          );
+        }
+
+        const firstScheduledSession = sessions.find(
+          (session) => !!session.date,
+        );
+
+        return firstScheduledSession
+          ? String(firstScheduledSession.session_number)
+          : "";
+      }
+
+      function getSeasonSessionState(session, resultMap, participants) {
+        const officialRows = Array.isArray(attendanceHistory.rows)
+          ? attendanceHistory.rows.filter((row) => {
+              return (
+                String(row.session_number || "") ===
+                String(session.session_number || "")
+              );
+            })
+          : [];
+
+        if (officialRows.length > 0) {
+          return {
+            label: "FINALIZED",
+            className: "finalized",
+          };
+        }
+
+        return {
+          label: "OPEN",
+          className: "open",
+        };
+      }
       function renderSeasonTable() {
         seasonTableHead.innerHTML = "";
         seasonTableBody.innerHTML = "";
@@ -2297,6 +2453,7 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
 
         const participants = roster.length ? sortRoster(roster) : [];
         const sessions = buildSeasonSessions();
+        const currentSessionNumber = getCurrentSeasonSessionNumber(sessions);
 
         if (!participants.length) {
           setSeasonTableMessage("No roster students are loaded for this program.");
@@ -2331,6 +2488,13 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
           const th = document.createElement("th");
           th.classList.add(seasonDayHeaderClass(session.date));
 
+          const isCurrent =
+            String(session.session_number) === String(currentSessionNumber);
+
+          if (isCurrent) {
+            th.classList.add("seasonCurrentColumn");
+          }
+
           const sessionLabel = document.createElement("span");
           sessionLabel.className = "seasonHeaderSession";
           sessionLabel.textContent = "S" + session.session_number;
@@ -2339,7 +2503,26 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
           dateLabel.className = "seasonHeaderDate";
           dateLabel.textContent = compactDateLabel(session.date);
 
-          th.append(sessionLabel, dateLabel);
+          const sessionState = getSeasonSessionState(
+            session,
+            resultMap,
+            participants,
+          );
+
+          const statusLabel = document.createElement("span");
+          statusLabel.className =
+            "seasonHeaderStatus " + sessionState.className;
+          statusLabel.textContent = sessionState.label;
+
+          th.append(sessionLabel, dateLabel, statusLabel);
+
+          if (isCurrent) {
+            const currentBadge = document.createElement("span");
+            currentBadge.className = "seasonCurrentBadge";
+            currentBadge.textContent = "CURRENT";
+            th.appendChild(currentBadge);
+          }
+
           headerRow.appendChild(th);
         });
 
@@ -2380,6 +2563,14 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
 
           sessions.forEach((session, sessionIndex) => {
             const cell = document.createElement("td");
+
+            if (
+              String(session.session_number) ===
+              String(currentSessionNumber)
+            ) {
+              cell.classList.add("seasonCurrentColumn");
+            }
+
             const mark = document.createElement("span");
             const key = studentId + "||" + session.session_number;
             const status = resultMap[key] || "";
@@ -2437,6 +2628,14 @@ ${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\
 
         sessions.forEach((session, index) => {
           const cell = document.createElement("td");
+
+          if (
+            String(session.session_number) ===
+            String(currentSessionNumber)
+          ) {
+            cell.classList.add("seasonCurrentColumn");
+          }
+
           const counts = document.createElement("div");
           counts.className = "seasonFooterCounts";
 

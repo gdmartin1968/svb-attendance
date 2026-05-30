@@ -590,6 +590,75 @@
         z-index: 7;
         background: #cae7a0;
       }
+      /* SEASON TABLE OPERATIONAL ENHANCEMENTS PATCH */
+      body.seasonMode .seasonTableWrap {
+        height: clamp(280px, calc(100vh - 245px), 720px);
+        overflow: auto;
+        overscroll-behavior: contain;
+      }
+      body.seasonMode .seasonTable thead th {
+        top: 0;
+        z-index: 10;
+      }
+      body.seasonMode .seasonTable thead th.studentCol {
+        z-index: 12;
+      }
+      body.seasonMode .seasonTable tfoot td {
+        bottom: 0;
+        z-index: 9;
+      }
+      body.seasonMode .seasonTableSection.hasHorizontalScroll .seasonTable tfoot td {
+        bottom: 0;
+      }
+      body.seasonMode .seasonTable tfoot td.studentCol {
+        z-index: 11;
+      }
+      .seasonHeaderStatus {
+        display: block;
+        margin-top: 5px;
+        padding: 2px 4px;
+        border-radius: 999px;
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+      }
+      .seasonHeaderStatus.open {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+      }
+      .seasonHeaderStatus.partial {
+        background: #ffe082;
+        color: #5d4300;
+      }
+      .seasonHeaderStatus.finalized {
+        background: #ffffff;
+        color: #246523;
+      }
+      body.seasonMode .seasonTable thead th.seasonCurrentColumn {
+        outline: 3px solid #ffd54f;
+        outline-offset: -3px;
+        box-shadow: inset 0 -4px 0 #ffd54f;
+      }
+      body.seasonMode .seasonTable tbody tr:nth-child(odd) td.seasonCurrentColumn {
+        background: #fff6ce !important;
+      }
+      body.seasonMode .seasonTable tbody tr:nth-child(even) td.seasonCurrentColumn {
+        background: #f4ebbf !important;
+      }
+      body.seasonMode .seasonTable tfoot td.seasonCurrentColumn {
+        background: #efd989;
+      }
+      .seasonCurrentBadge {
+        display: block;
+        margin-top: 4px;
+        color: #533900;
+        background: #ffd54f;
+        border-radius: 999px;
+        padding: 2px 4px;
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+      }
       .seasonFooterCounts {
         display: flex;
         flex-direction: column;
@@ -1797,6 +1866,58 @@
         }
       });
 
+      function getCurrentSeasonSessionNumber(sessions) {
+        const selectedDate = String(dateEl.value || "");
+
+        const exactSession = sessions.find(
+          (session) => session.date && session.date === selectedDate,
+        );
+
+        if (exactSession) {
+          return String(exactSession.session_number);
+        }
+
+        const priorSessions = sessions.filter(
+          (session) => session.date && session.date <= selectedDate,
+        );
+
+        if (priorSessions.length) {
+          return String(
+            priorSessions[priorSessions.length - 1].session_number,
+          );
+        }
+
+        const firstScheduledSession = sessions.find(
+          (session) => !!session.date,
+        );
+
+        return firstScheduledSession
+          ? String(firstScheduledSession.session_number)
+          : "";
+      }
+
+      function getSeasonSessionState(session, resultMap, participants) {
+        const officialRows = Array.isArray(attendanceHistory.rows)
+          ? attendanceHistory.rows.filter((row) => {
+              return (
+                String(row.session_number || "") ===
+                String(session.session_number || "")
+              );
+            })
+          : [];
+
+        if (officialRows.length > 0) {
+          return {
+            label: "FINALIZED",
+            className: "finalized",
+          };
+        }
+
+        return {
+          label: "OPEN",
+          className: "open",
+        };
+      }
       function renderSeasonTable() {
         seasonTableHead.innerHTML = "";
         seasonTableBody.innerHTML = "";
@@ -1804,6 +1925,7 @@
 
         const participants = roster.length ? sortRoster(roster) : [];
         const sessions = buildSeasonSessions();
+        const currentSessionNumber = getCurrentSeasonSessionNumber(sessions);
 
         if (!participants.length) {
           setSeasonTableMessage("No roster students are loaded for this program.");
@@ -1838,6 +1960,13 @@
           const th = document.createElement("th");
           th.classList.add(seasonDayHeaderClass(session.date));
 
+          const isCurrent =
+            String(session.session_number) === String(currentSessionNumber);
+
+          if (isCurrent) {
+            th.classList.add("seasonCurrentColumn");
+          }
+
           const sessionLabel = document.createElement("span");
           sessionLabel.className = "seasonHeaderSession";
           sessionLabel.textContent = "S" + session.session_number;
@@ -1846,7 +1975,26 @@
           dateLabel.className = "seasonHeaderDate";
           dateLabel.textContent = compactDateLabel(session.date);
 
-          th.append(sessionLabel, dateLabel);
+          const sessionState = getSeasonSessionState(
+            session,
+            resultMap,
+            participants,
+          );
+
+          const statusLabel = document.createElement("span");
+          statusLabel.className =
+            "seasonHeaderStatus " + sessionState.className;
+          statusLabel.textContent = sessionState.label;
+
+          th.append(sessionLabel, dateLabel, statusLabel);
+
+          if (isCurrent) {
+            const currentBadge = document.createElement("span");
+            currentBadge.className = "seasonCurrentBadge";
+            currentBadge.textContent = "CURRENT";
+            th.appendChild(currentBadge);
+          }
+
           headerRow.appendChild(th);
         });
 
@@ -1887,6 +2035,14 @@
 
           sessions.forEach((session, sessionIndex) => {
             const cell = document.createElement("td");
+
+            if (
+              String(session.session_number) ===
+              String(currentSessionNumber)
+            ) {
+              cell.classList.add("seasonCurrentColumn");
+            }
+
             const mark = document.createElement("span");
             const key = studentId + "||" + session.session_number;
             const status = resultMap[key] || "";
@@ -1944,6 +2100,14 @@
 
         sessions.forEach((session, index) => {
           const cell = document.createElement("td");
+
+          if (
+            String(session.session_number) ===
+            String(currentSessionNumber)
+          ) {
+            cell.classList.add("seasonCurrentColumn");
+          }
+
           const counts = document.createElement("div");
           counts.className = "seasonFooterCounts";
 
