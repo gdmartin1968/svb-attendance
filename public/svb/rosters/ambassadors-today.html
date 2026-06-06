@@ -558,6 +558,7 @@
         coachStatus[name] = !coachStatus[name];
         saveCoachStatus(coachStatus);
         renderCoaches();
+        updateCounter();
       }
       function saveGroupColor(pid, color) {
         if (color) { groupColors[pid] = color; } else { delete groupColors[pid]; }
@@ -883,7 +884,7 @@
 
         roster.forEach((p) => {
           const st = statusMap[p.participant_id]?.status || "none";
-          const finalStatus = st === "in" || st === "out" ? "Present" : "Absent";
+          const finalStatus = st === "in" ? "Present" : "Absent";
           const snapshotUrl = SCRIPT_URL + "?" + qs({
             action: "attendance_snapshot",
             pin,
@@ -907,42 +908,71 @@
       function updateCounter() {
         const list = roster.length ? roster : [];
         let inNow = 0;
-        let presentTotal = 0;
         const presentNames = [];
+
         list.forEach((p) => {
           const st = statusMap[p.participant_id]?.status || "none";
+
           if (st === "in") {
             inNow++;
-            presentTotal++;
-            presentNames.push(p.display_name || p.participant_id);
-          } else if (st === "out") {
-            presentTotal++;
             presentNames.push(p.display_name || p.participant_id);
           }
         });
+
+        const coachesPresent = COACHES.filter((name) => !!coachStatus[name]);
         const date_iso = dateEl.value;
-        counterEl.textContent = `In attendance now: ${inNow}  •  Present total: ${presentTotal}  •  Date: ${date_iso}  •  ${TZ_LABEL}`;
+
+        counterEl.textContent =
+          `Selected for attendance: ${inNow}  •  Coaches present: ${coachesPresent.length}/${COACHES.length}  •  Total roster: ${list.length}  •  Date: ${date_iso}  •  ${TZ_LABEL}`;
+
         counterTopNums.textContent = inNow;
 
-        const subject = encodeURIComponent(
-          `Ambassadors Attendance Report - ${date_iso}`
-        );
-        const body = encodeURIComponent(
-          `Ambassadors Attendance Report\nDate: ${date_iso}\n\nIn Attendance Now: ${inNow}\nTotal Present (including signed out): ${presentTotal}\nTotal Roster: ${list.length}\n\nStudents Present:\n${presentNames.length ? presentNames.map((n, i) => `${i+1}. ${n}`).join('\n') : '(none)'}`
-        );
-        const mailtoUrl = `mailto:nwalton@svbtennisfoundation.org?cc=mytournamentdirector@gmail.com&subject=${subject}&body=${body}`;
+        const emailTo = "nwalton@svbtennisfoundation.org";
+        const emailCc =
+          "kevin@svbtennisfoundation.org,classroom.connector@gmail.com";
+
+        const emailSubject =
+          `Ambassadors Attendance Report - ${date_iso}`;
+
+        const emailBody = `Ambassadors Attendance Report
+Date: ${date_iso}
+
+Ambassadors Present: ${inNow} of ${list.length}
+Coaches Present: ${coachesPresent.length} of ${COACHES.length}
+
+Ambassadors Present:
+${presentNames.length ? presentNames.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}
+
+Coaches Present:
+${coachesPresent.length ? coachesPresent.map((n, i) => `${i + 1}. ${n}`).join("\n") : "(none)"}`;
+
         emailReportLink.onclick = () => {
-          const a = document.createElement('a');
-          a.href = mailtoUrl;
-          a.setAttribute('target', '_self');
-          a.style.display = 'none';
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => document.body.removeChild(a), 100);
+          openEmailDraft({
+            to: emailTo,
+            cc: emailCc,
+            subject: emailSubject,
+            body: emailBody,
+          });
         };
+
         finalizeAttendanceBtn.onclick = saveAttendanceSnapshot;
       }
-      
+
+      function openEmailDraft({ to, cc, subject, body }) {
+        const encodedTo = encodeURIComponent(to || "");
+        const encodedCc = encodeURIComponent(cc || "");
+        const encodedSubject = encodeURIComponent(subject || "");
+        const encodedBody = encodeURIComponent(body || "");
+
+        const gmailComposeUrl =
+          `https://mail.google.com/mail/?view=cm&fs=1` +
+          `&to=${encodedTo}` +
+          `&cc=${encodedCc}` +
+          `&su=${encodedSubject}` +
+          `&body=${encodedBody}`;
+
+        window.open(gmailComposeUrl, "_blank");
+      }
       function render() {
         grid.innerHTML = "";
         coachStatus = loadCoachStatus();
@@ -979,11 +1009,9 @@
           status.className = "status";
           if (currentMode === "attendance") {
             status.textContent =
-              st === "none"
-                ? "Not logged in"
-                : st === "in"
-                  ? "Signed in (not signed out)"
-                  : "Signed out";
+              st === "in"
+                ? "In attendance"
+                : "Not in attendance";
           } else {
             const gc = groupColors[pid];
             status.textContent = gc ? gc.charAt(0).toUpperCase() + gc.slice(1) + " group" : "No group";
@@ -1029,47 +1057,22 @@
               return;
             }
 
-            let shouldUpdate = false;
-            
-            if (st === "none") {
-              logEvent(pin, {
-                participant_id: pid,
-                action: "signin",
-                status: "in",
-                feeling: "",
-              });
-              shouldUpdate = true;
-            } else if (st === "in") {
-              const takeaway = prompt(
-                "What's your biggest takeaway from this training session?",
-              );
-              if (takeaway === null) return;
-              logEvent(pin, {
-                participant_id: pid,
-                action: "signout",
-                status: "out",
-                takeaway: takeaway.slice(0, 200),
-              });
-              shouldUpdate = true;
-            } else {
-              if (confirm("They are signed out. Sign them in again?")) {
-                logEvent(pin, {
-                  participant_id: pid,
-                  action: "resignin",
-                  status: "in",
-                });
-                shouldUpdate = true;
-              }
-            }
+            const isCurrentlySelected = st === "in";
 
-            if (!shouldUpdate) return;
-            
             const newStatus = {
-              status: st === "in" ? "out" : "in",
+              status: isCurrentlySelected ? "none" : "in",
               ts: new Date().toISOString(),
             };
+
+            logEvent(pin, {
+              participant_id: pid,
+              action: isCurrentlySelected ? "undo" : "signin",
+              status: newStatus.status,
+            });
+
             statusMap[pid] = newStatus;
             localChanges[pid] = newStatus;
+
             render();
             setTimeout(refreshAll, 2000);
           };
